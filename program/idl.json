@@ -1,0 +1,18 @@
+{
+  "version": "0.0.0",
+  "name": "solana_loader_v4_program",
+  "instructions": [],
+  "errors": [
+    {
+      "code": 0,
+      "name": "Placeholder",
+      "msg": "This is a placeholder error"
+    }
+  ],
+  "metadata": {
+    "origin": "shank",
+    "address": "CoreBPFLoaderV41111111111111111111111111111",
+    "binaryVersion": "0.4.2",
+    "libVersion": "^0.4.2"
+  }
+}
