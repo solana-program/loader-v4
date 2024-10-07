@@ -3848,6 +3848,7 @@ name = "solana-loader-v4-program"
 version = "0.0.0"
 dependencies = [
  "bincode",
+ "memoffset",
  "num-derive 0.3.3",
  "num-traits",
  "serde",

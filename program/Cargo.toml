@@ -23,6 +23,7 @@ solana-program = "~2.0"
 thiserror = "^1.0"
 
 [dev-dependencies]
+memoffset = "0.9"
 
 [features]
 bpf-entrypoint = []
