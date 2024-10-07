@@ -3,10 +3,11 @@
 use {
     crate::{
         instruction::LoaderV4Instruction,
-        state::{LoaderV4State, LoaderV4Status},
+        state::{LoaderV4State, LoaderV4Status, DEPLOYMENT_COOLDOWN_IN_SLOTS},
     },
     solana_program::{
         account_info::{next_account_info, AccountInfo},
+        clock::{Clock, Slot},
         entrypoint::ProgramResult,
         msg,
         program_error::ProgramError,
@@ -15,6 +16,10 @@ use {
         sysvar::Sysvar,
     },
 };
+
+// Keep in sync with the constant from the program-runtime.
+// https://github.com/anza-xyz/agave/blob/1e389f48636cf7e710f38f154b9d683c15d1cb0c/program-runtime/src/loaded_programs.rs#L37
+pub const DELAY_VISIBILITY_SLOT_OFFSET: Slot = 1;
 
 // [Core BPF]: Locally-implemented
 // `solana_sdk::program_utils::limited_deserialize`.
@@ -183,7 +188,85 @@ fn process_truncate(program_id: &Pubkey, accounts: &[AccountInfo], new_size: u32
 /// Processes a
 /// [Deploy](enum.LoaderV4Instruction.html)
 /// instruction.
-fn process_deploy(_program_id: &Pubkey, _accounts: &[AccountInfo]) -> ProgramResult {
+fn process_deploy(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+    let accounts_iter = &mut accounts.iter();
+
+    let program_info = next_account_info(accounts_iter)?;
+    let authority_info = next_account_info(accounts_iter)?;
+    let source_info = next_account_info(accounts_iter).ok();
+
+    let state = check_program_account(program_id, program_info, authority_info)?;
+
+    let current_slot = <Clock as Sysvar>::get()?.slot;
+
+    // Slot = 0 indicates that the program hasn't been deployed yet. So no need
+    // to check for the cooldown slots.
+    // (Without this check, the program deployment is failing in freshly
+    // started test validators. That's because at startup current_slot is 0,
+    // which is < DEPLOYMENT_COOLDOWN_IN_SLOTS).
+    if state.slot != 0 && state.slot.saturating_add(DEPLOYMENT_COOLDOWN_IN_SLOTS) > current_slot {
+        msg!("Program was deployed recently, cooldown still in effect");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    if !matches!(state.status, LoaderV4Status::Retracted) {
+        msg!("Destination program is not retracted");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    let buffer_info = if let Some(ref source_program) = source_info {
+        let source_state = check_program_account(program_id, source_program, authority_info)?;
+        if !matches!(source_state.status, LoaderV4Status::Retracted) {
+            msg!("Source program is not retracted");
+            return Err(ProgramError::InvalidArgument);
+        }
+        source_program
+    } else {
+        &program_info
+    };
+
+    let _programdata = buffer_info
+        .try_borrow_data()?
+        .get(LoaderV4State::program_data_offset()..)
+        .ok_or(ProgramError::AccountDataTooSmall)?;
+
+    let deployment_slot = state.slot;
+    let _effective_slot = deployment_slot.saturating_add(DELAY_VISIBILITY_SLOT_OFFSET);
+
+    // [CORE BPF]: We'll see what happens with on-chain verification...
+    // Something like this would be nice:
+    // invoke(
+    //     &solana_bpf_verify_program::instruction::verify(buffer_info.key),
+    //     &[buffer_info.clone()],
+    // )?;
+
+    if let Some(source_info) = source_info {
+        let rent = <Rent as Sysvar>::get()?;
+        let required_lamports = rent.minimum_balance(source_info.data_len());
+        let transfer_lamports = required_lamports.saturating_sub(program_info.lamports());
+        let new_program_lamports = program_info.lamports().saturating_add(transfer_lamports);
+        let new_source_lamports = source_info.lamports().saturating_sub(transfer_lamports);
+
+        {
+            if program_info.data_len() < source_info.data_len() {
+                program_info.realloc(source_info.data_len(), true)?;
+            }
+            let mut program_data = program_info.try_borrow_mut_data()?;
+            let source_data = source_info.try_borrow_mut_data()?;
+            program_data[..].copy_from_slice(&source_data[..]);
+        }
+        source_info.realloc(0, true)?;
+
+        **program_info.try_borrow_mut_lamports()? = new_program_lamports;
+        **source_info.try_borrow_mut_lamports()? = new_source_lamports;
+    }
+    let mut data = program_info.try_borrow_mut_data()?;
+    let state = LoaderV4State::unpack_mut(&mut data)?;
+    state.slot = current_slot;
+    state.status = LoaderV4Status::Deployed;
+
+    // [CORE BPF]: Store modified entry in program cache.
+
     Ok(())
 }
 
