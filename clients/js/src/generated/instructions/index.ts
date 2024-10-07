@@ -6,6 +6,9 @@
  * @see https://github.com/kinobi-so/kinobi
  */
 
-export * from './errors';
-export * from './instructions';
-export * from './programs';
+export * from './deploy';
+export * from './finalize';
+export * from './retract';
+export * from './transferAuthority';
+export * from './truncate';
+export * from './write';
