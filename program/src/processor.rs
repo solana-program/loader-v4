@@ -305,7 +305,29 @@ fn process_retract(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResu
 /// Processes a
 /// [TransferAuthority](enum.LoaderV4Instruction.html)
 /// instruction.
-fn process_transfer_authority(_program_id: &Pubkey, _accounts: &[AccountInfo]) -> ProgramResult {
+fn process_transfer_authority(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+    let accounts_iter = &mut accounts.iter();
+
+    let program_info = next_account_info(accounts_iter)?;
+    let old_authority_info = next_account_info(accounts_iter)?;
+    let new_authority_info = next_account_info(accounts_iter)?;
+
+    let state = check_program_account(program_id, program_info, old_authority_info)?;
+
+    if !new_authority_info.is_signer {
+        msg!("New authority did not sign");
+        return Err(ProgramError::MissingRequiredSignature);
+    }
+
+    if state.authority_address_or_next_version == *new_authority_info.key {
+        msg!("No change");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    let mut data = program_info.try_borrow_mut_data()?;
+    let state = LoaderV4State::unpack_mut(&mut data)?;
+    state.authority_address_or_next_version = *new_authority_info.key;
+
     Ok(())
 }
 
