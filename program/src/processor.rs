@@ -273,7 +273,32 @@ fn process_deploy(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResul
 /// Processes a
 /// [Retract](enum.LoaderV4Instruction.html)
 /// instruction.
-fn process_retract(_program_id: &Pubkey, _accounts: &[AccountInfo]) -> ProgramResult {
+fn process_retract(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+    let accounts_iter = &mut accounts.iter();
+
+    let program_info = next_account_info(accounts_iter)?;
+    let authority_info = next_account_info(accounts_iter)?;
+
+    let state = check_program_account(program_id, program_info, authority_info)?;
+
+    let current_slot = <Clock as Sysvar>::get()?.slot;
+
+    if state.slot.saturating_add(DEPLOYMENT_COOLDOWN_IN_SLOTS) > current_slot {
+        msg!("Program was deployed recently, cooldown still in effect");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    if !matches!(state.status, LoaderV4Status::Deployed) {
+        msg!("Program is not deployed");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    let mut data = program_info.try_borrow_mut_data()?;
+    let state = LoaderV4State::unpack_mut(&mut data)?;
+    state.status = LoaderV4Status::Retracted;
+
+    // [CORE BPF]: Store modified entry in program cache.
+
     Ok(())
 }
 
