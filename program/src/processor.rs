@@ -334,7 +334,42 @@ fn process_transfer_authority(program_id: &Pubkey, accounts: &[AccountInfo]) -> 
 /// Processes a
 /// [Finalize](enum.LoaderV4Instruction.html)
 /// instruction.
-fn process_finalize(_program_id: &Pubkey, _accounts: &[AccountInfo]) -> ProgramResult {
+fn process_finalize(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+    let accounts_iter = &mut accounts.iter();
+
+    let program_info = next_account_info(accounts_iter)?;
+    let authority_info = next_account_info(accounts_iter)?;
+    let next_version_info = next_account_info(accounts_iter)?;
+
+    let state = check_program_account(program_id, program_info, authority_info)?;
+
+    if !matches!(state.status, LoaderV4Status::Deployed) {
+        msg!("Program must be deployed to be finalized");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    if next_version_info.owner != program_id {
+        msg!("Next version is not owned by loader");
+        return Err(ProgramError::InvalidAccountOwner);
+    }
+
+    let next_version_data = next_version_info.try_borrow_data()?;
+    let next_version_state = LoaderV4State::unpack(&next_version_data)?;
+
+    if next_version_state.authority_address_or_next_version != *authority_info.key {
+        msg!("Next version has a different authority");
+        return Err(ProgramError::IncorrectAuthority);
+    }
+    if matches!(next_version_state.status, LoaderV4Status::Finalized) {
+        msg!("Next version is finalized");
+        return Err(ProgramError::Immutable);
+    }
+
+    let mut data = program_info.try_borrow_mut_data()?;
+    let state = LoaderV4State::unpack_mut(&mut data)?;
+    state.authority_address_or_next_version = *next_version_info.key;
+    state.status = LoaderV4Status::Finalized;
+
     Ok(())
 }
 
