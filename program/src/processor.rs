@@ -142,7 +142,7 @@ fn process_truncate(program_id: &Pubkey, accounts: &[AccountInfo], new_size: u32
 
     match program_info.lamports().cmp(&required_lamports) {
         std::cmp::Ordering::Less => {
-            msg!("Insufficient lamports, {} are required", required_lamports);
+            msg!("Insufficient lamports, {} are required.", required_lamports);
             return Err(ProgramError::InsufficientFunds);
         }
         std::cmp::Ordering::Greater => {
