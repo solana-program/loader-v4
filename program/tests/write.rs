@@ -230,6 +230,7 @@ fn success() {
         ],
         &[
             Check::success(),
+            Check::compute_units(868),
             Check::account(&program).data(&check_data).build(),
         ],
     );
@@ -247,6 +248,7 @@ fn success() {
         ],
         &[
             Check::success(),
+            Check::compute_units(840),
             Check::account(&program).data(&check_data).build(),
         ],
     );
