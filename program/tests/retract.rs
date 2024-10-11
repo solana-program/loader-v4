@@ -254,6 +254,7 @@ fn success() {
         ],
         &[
             Check::success(),
+            Check::compute_units(1_011),
             Check::account(&program).data(&check_data).build(),
         ],
     );

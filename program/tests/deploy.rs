@@ -253,6 +253,7 @@ fn success() {
         ],
         &[
             Check::success(),
+            Check::compute_units(1_058),
             Check::account(&program).data(&check_data).build(),
         ],
     );
@@ -285,6 +286,7 @@ fn success() {
         ],
         &[
             Check::success(),
+            Check::compute_units(1_058),
             Check::account(&program).data(&check_data).build(),
         ],
     );
@@ -566,6 +568,7 @@ fn success_source_program() {
         ],
         &[
             Check::success(),
+            Check::compute_units(2_122),
             Check::account(&program).data(&check_data).build(),
             Check::account(&source).data(&[]).build(),
         ],
@@ -607,6 +610,7 @@ fn success_source_program() {
         ],
         &[
             Check::success(),
+            Check::compute_units(2_049),
             Check::account(&program).data(&check_data).build(),
             Check::account(&source).data(&[]).build(),
         ],
