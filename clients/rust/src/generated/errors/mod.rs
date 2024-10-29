@@ -3,7 +3,3 @@
 //! to add features, then rerun kinobi to update it.
 //!
 //! <https://github.com/kinobi-so/kinobi>
-
-pub(crate) mod loader_v4;
-
-pub use self::loader_v4::LoaderV4Error;

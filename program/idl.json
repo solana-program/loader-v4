@@ -207,13 +207,6 @@
       }
     }
   ],
-  "errors": [
-    {
-      "code": 0,
-      "name": "Placeholder",
-      "msg": "This is a placeholder error"
-    }
-  ],
   "metadata": {
     "origin": "shank",
     "address": "CoreBPFLoaderV41111111111111111111111111111",
