@@ -24,7 +24,7 @@ thiserror = "^1.0"
 
 [dev-dependencies]
 memoffset = "0.9"
-mollusk-svm = { version = "0.0.5", features = ["fuzz"] }
+mollusk-svm = { version = "0.0.10-solana-2.0", features = ["fuzz-fd"] }
 solana-sdk = "~2.0"
 
 [features]
