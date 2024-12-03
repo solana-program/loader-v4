@@ -12,8 +12,6 @@ import {
   getStructEncoder,
   getU32Decoder,
   getU32Encoder,
-  getU8Decoder,
-  getU8Encoder,
   transformEncoder,
   type Address,
   type Codec,
@@ -35,7 +33,7 @@ import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 export const TRUNCATE_DISCRIMINATOR = 1;
 
 export function getTruncateDiscriminatorBytes() {
-  return getU8Encoder().encode(TRUNCATE_DISCRIMINATOR);
+  return getU32Encoder().encode(TRUNCATE_DISCRIMINATOR);
 }
 
 export type TruncateInstruction<
@@ -73,7 +71,7 @@ export type TruncateInstructionDataArgs = { newSize: number };
 export function getTruncateInstructionDataEncoder(): Encoder<TruncateInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
-      ['discriminator', getU8Encoder()],
+      ['discriminator', getU32Encoder()],
       ['newSize', getU32Encoder()],
     ]),
     (value) => ({ ...value, discriminator: TRUNCATE_DISCRIMINATOR })
@@ -82,7 +80,7 @@ export function getTruncateInstructionDataEncoder(): Encoder<TruncateInstruction
 
 export function getTruncateInstructionDataDecoder(): Decoder<TruncateInstructionData> {
   return getStructDecoder([
-    ['discriminator', getU8Decoder()],
+    ['discriminator', getU32Decoder()],
     ['newSize', getU32Decoder()],
   ]);
 }

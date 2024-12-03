@@ -8,7 +8,7 @@
 
 import {
   containsBytes,
-  getU8Encoder,
+  getU32Encoder,
   type Address,
   type ReadonlyUint8Array,
 } from '@solana/web3.js';
@@ -37,22 +37,22 @@ export function identifyLoaderV4Instruction(
   instruction: { data: ReadonlyUint8Array } | ReadonlyUint8Array
 ): LoaderV4Instruction {
   const data = 'data' in instruction ? instruction.data : instruction;
-  if (containsBytes(data, getU8Encoder().encode(0), 0)) {
+  if (containsBytes(data, getU32Encoder().encode(0), 0)) {
     return LoaderV4Instruction.Write;
   }
-  if (containsBytes(data, getU8Encoder().encode(1), 0)) {
+  if (containsBytes(data, getU32Encoder().encode(1), 0)) {
     return LoaderV4Instruction.Truncate;
   }
-  if (containsBytes(data, getU8Encoder().encode(2), 0)) {
+  if (containsBytes(data, getU32Encoder().encode(2), 0)) {
     return LoaderV4Instruction.Deploy;
   }
-  if (containsBytes(data, getU8Encoder().encode(3), 0)) {
+  if (containsBytes(data, getU32Encoder().encode(3), 0)) {
     return LoaderV4Instruction.Retract;
   }
-  if (containsBytes(data, getU8Encoder().encode(4), 0)) {
+  if (containsBytes(data, getU32Encoder().encode(4), 0)) {
     return LoaderV4Instruction.TransferAuthority;
   }
-  if (containsBytes(data, getU8Encoder().encode(5), 0)) {
+  if (containsBytes(data, getU32Encoder().encode(5), 0)) {
     return LoaderV4Instruction.Finalize;
   }
   throw new Error(

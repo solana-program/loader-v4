@@ -45,7 +45,7 @@ impl Retract {
 
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct RetractInstructionData {
-    discriminator: u8,
+    discriminator: u32,
 }
 
 impl RetractInstructionData {

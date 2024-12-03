@@ -64,7 +64,7 @@ impl Truncate {
 
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct TruncateInstructionData {
-    discriminator: u8,
+    discriminator: u32,
 }
 
 impl TruncateInstructionData {

@@ -53,7 +53,7 @@ impl TransferAuthority {
 
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct TransferAuthorityInstructionData {
-    discriminator: u8,
+    discriminator: u32,
 }
 
 impl TransferAuthorityInstructionData {

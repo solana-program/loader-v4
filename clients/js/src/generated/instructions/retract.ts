@@ -10,8 +10,8 @@ import {
   combineCodec,
   getStructDecoder,
   getStructEncoder,
-  getU8Decoder,
-  getU8Encoder,
+  getU32Decoder,
+  getU32Encoder,
   transformEncoder,
   type Address,
   type Codec,
@@ -32,7 +32,7 @@ import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 export const RETRACT_DISCRIMINATOR = 3;
 
 export function getRetractDiscriminatorBytes() {
-  return getU8Encoder().encode(RETRACT_DISCRIMINATOR);
+  return getU32Encoder().encode(RETRACT_DISCRIMINATOR);
 }
 
 export type RetractInstruction<
@@ -61,13 +61,13 @@ export type RetractInstructionDataArgs = {};
 
 export function getRetractInstructionDataEncoder(): Encoder<RetractInstructionDataArgs> {
   return transformEncoder(
-    getStructEncoder([['discriminator', getU8Encoder()]]),
+    getStructEncoder([['discriminator', getU32Encoder()]]),
     (value) => ({ ...value, discriminator: RETRACT_DISCRIMINATOR })
   );
 }
 
 export function getRetractInstructionDataDecoder(): Decoder<RetractInstructionData> {
-  return getStructDecoder([['discriminator', getU8Decoder()]]);
+  return getStructDecoder([['discriminator', getU32Decoder()]]);
 }
 
 export function getRetractInstructionDataCodec(): Codec<

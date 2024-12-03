@@ -56,7 +56,7 @@ impl Deploy {
 
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct DeployInstructionData {
-    discriminator: u8,
+    discriminator: u32,
 }
 
 impl DeployInstructionData {
