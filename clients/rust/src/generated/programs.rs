@@ -7,4 +7,4 @@
 use solana_program::{pubkey, pubkey::Pubkey};
 
 /// `loader_v4` program ID.
-pub const LOADER_V4_ID: Pubkey = pubkey!("CoreBPFLoaderV41111111111111111111111111111");
+pub const LOADER_V4_ID: Pubkey = pubkey!("LoaderV411111111111111111111111111111111111");

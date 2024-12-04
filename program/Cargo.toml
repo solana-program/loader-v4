@@ -7,7 +7,7 @@ license-file = "../LICENSE"
 publish = false
 
 [package.metadata.solana]
-program-id = "CoreBPFLoaderV41111111111111111111111111111"
+program-id = "LoaderV411111111111111111111111111111111111"
 program-dependencies = []
 
 [lib]

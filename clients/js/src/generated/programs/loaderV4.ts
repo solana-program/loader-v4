@@ -22,7 +22,7 @@ import {
 } from '../instructions';
 
 export const LOADER_V4_PROGRAM_ADDRESS =
-  'CoreBPFLoaderV41111111111111111111111111111' as Address<'CoreBPFLoaderV41111111111111111111111111111'>;
+  'LoaderV411111111111111111111111111111111111' as Address<'LoaderV411111111111111111111111111111111111'>;
 
 export enum LoaderV4Instruction {
   Write,
@@ -61,7 +61,7 @@ export function identifyLoaderV4Instruction(
 }
 
 export type ParsedLoaderV4Instruction<
-  TProgram extends string = 'CoreBPFLoaderV41111111111111111111111111111',
+  TProgram extends string = 'LoaderV411111111111111111111111111111111111',
 > =
   | ({
       instructionType: LoaderV4Instruction.Write;
