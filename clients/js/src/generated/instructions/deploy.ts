@@ -10,8 +10,8 @@ import {
   combineCodec,
   getStructDecoder,
   getStructEncoder,
-  getU8Decoder,
-  getU8Encoder,
+  getU32Decoder,
+  getU32Encoder,
   transformEncoder,
   type Address,
   type Codec,
@@ -32,7 +32,7 @@ import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 export const DEPLOY_DISCRIMINATOR = 2;
 
 export function getDeployDiscriminatorBytes() {
-  return getU8Encoder().encode(DEPLOY_DISCRIMINATOR);
+  return getU32Encoder().encode(DEPLOY_DISCRIMINATOR);
 }
 
 export type DeployInstruction<
@@ -65,13 +65,13 @@ export type DeployInstructionDataArgs = {};
 
 export function getDeployInstructionDataEncoder(): Encoder<DeployInstructionDataArgs> {
   return transformEncoder(
-    getStructEncoder([['discriminator', getU8Encoder()]]),
+    getStructEncoder([['discriminator', getU32Encoder()]]),
     (value) => ({ ...value, discriminator: DEPLOY_DISCRIMINATOR })
   );
 }
 
 export function getDeployInstructionDataDecoder(): Decoder<DeployInstructionData> {
-  return getStructDecoder([['discriminator', getU8Decoder()]]);
+  return getStructDecoder([['discriminator', getU32Decoder()]]);
 }
 
 export function getDeployInstructionDataCodec(): Codec<

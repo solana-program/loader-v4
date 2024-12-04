@@ -10,8 +10,8 @@ import {
   combineCodec,
   getStructDecoder,
   getStructEncoder,
-  getU8Decoder,
-  getU8Encoder,
+  getU32Decoder,
+  getU32Encoder,
   transformEncoder,
   type Address,
   type Codec,
@@ -32,7 +32,7 @@ import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 export const TRANSFER_AUTHORITY_DISCRIMINATOR = 4;
 
 export function getTransferAuthorityDiscriminatorBytes() {
-  return getU8Encoder().encode(TRANSFER_AUTHORITY_DISCRIMINATOR);
+  return getU32Encoder().encode(TRANSFER_AUTHORITY_DISCRIMINATOR);
 }
 
 export type TransferAuthorityInstruction<
@@ -66,13 +66,13 @@ export type TransferAuthorityInstructionDataArgs = {};
 
 export function getTransferAuthorityInstructionDataEncoder(): Encoder<TransferAuthorityInstructionDataArgs> {
   return transformEncoder(
-    getStructEncoder([['discriminator', getU8Encoder()]]),
+    getStructEncoder([['discriminator', getU32Encoder()]]),
     (value) => ({ ...value, discriminator: TRANSFER_AUTHORITY_DISCRIMINATOR })
   );
 }
 
 export function getTransferAuthorityInstructionDataDecoder(): Decoder<TransferAuthorityInstructionData> {
-  return getStructDecoder([['discriminator', getU8Decoder()]]);
+  return getStructDecoder([['discriminator', getU32Decoder()]]);
 }
 
 export function getTransferAuthorityInstructionDataCodec(): Codec<

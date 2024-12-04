@@ -51,7 +51,7 @@ impl Finalize {
 
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct FinalizeInstructionData {
-    discriminator: u8,
+    discriminator: u32,
 }
 
 impl FinalizeInstructionData {
