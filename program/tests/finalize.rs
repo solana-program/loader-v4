@@ -9,11 +9,7 @@ use {
         instruction::finalize,
         state::{LoaderV4State, LoaderV4Status},
     },
-    solana_sdk::{
-        account::{AccountSharedData, WritableAccount},
-        program_error::ProgramError,
-        pubkey::Pubkey,
-    },
+    solana_sdk::{account::Account, program_error::ProgramError, pubkey::Pubkey},
 };
 
 #[test]
@@ -40,13 +36,13 @@ fn fail_program_not_owned_by_loader() {
 
     // Incorrect owner.
     let mut program_account = loader_v4_state_account(&state, elf);
-    program_account.set_owner(Pubkey::new_unique());
+    program_account.owner = Pubkey::new_unique();
 
     mollusk.process_and_validate_instruction(
         &finalize(&program, &authority, &next_version),
         &[
             (program, program_account),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
             (
                 next_version,
                 loader_v4_state_account(&next_version_state, next_version_elf),
@@ -72,15 +68,14 @@ fn fail_program_invalid_state() {
     let next_version_elf = &[8; 1_500];
 
     // Invalid state.
-    let mut program_account =
-        AccountSharedData::new(100_000_000_000, 12, &solana_loader_v4_program::id());
-    program_account.set_data_from_slice(&[4; 12]);
+    let mut program_account = Account::new(100_000_000_000, 12, &solana_loader_v4_program::id());
+    program_account.data = vec![4; 12];
 
     mollusk.process_and_validate_instruction(
         &finalize(&program, &authority, &next_version),
         &[
             (program, program_account),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
             (
                 next_version,
                 loader_v4_state_account(&next_version_state, next_version_elf),
@@ -119,7 +114,7 @@ fn fail_program_not_writable() {
         &instruction,
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
             (
                 next_version,
                 loader_v4_state_account(&next_version_state, next_version_elf),
@@ -158,7 +153,7 @@ fn fail_authority_not_signer() {
         &instruction,
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
             (
                 next_version,
                 loader_v4_state_account(&next_version_state, next_version_elf),
@@ -194,7 +189,7 @@ fn fail_authority_mismatch() {
         &finalize(&program, &authority, &next_version),
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
             (
                 next_version,
                 loader_v4_state_account(&next_version_state, next_version_elf),
@@ -230,7 +225,7 @@ fn fail_program_finalized() {
         &finalize(&program, &authority, &next_version),
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
             (
                 next_version,
                 loader_v4_state_account(&next_version_state, next_version_elf),
@@ -266,7 +261,7 @@ fn fail_program_not_deployed() {
         &finalize(&program, &authority, &next_version),
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
             (
                 next_version,
                 loader_v4_state_account(&next_version_state, next_version_elf),
@@ -300,13 +295,13 @@ fn fail_next_version_not_owned_by_loader() {
 
     // Incorrect owner.
     let mut next_version_account = loader_v4_state_account(&next_version_state, next_version_elf);
-    next_version_account.set_owner(Pubkey::new_unique());
+    next_version_account.owner = Pubkey::new_unique();
 
     mollusk.process_and_validate_instruction(
         &finalize(&program, &authority, &next_version),
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
             (next_version, next_version_account),
         ],
         &[Check::err(ProgramError::InvalidAccountOwner)],
@@ -339,7 +334,7 @@ fn fail_next_version_authority_mismatch() {
         &finalize(&program, &authority, &next_version),
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
             (
                 next_version,
                 loader_v4_state_account(&next_version_state, next_version_elf),
@@ -375,7 +370,7 @@ fn fail_next_version_finalized() {
         &finalize(&program, &authority, &next_version),
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
             (
                 next_version,
                 loader_v4_state_account(&next_version_state, next_version_elf),
@@ -424,7 +419,7 @@ fn success() {
         &finalize(&program, &authority, &next_version),
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
             (
                 next_version,
                 loader_v4_state_account(&next_version_state, next_version_elf),

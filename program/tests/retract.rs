@@ -9,11 +9,7 @@ use {
         instruction::retract,
         state::{LoaderV4State, LoaderV4Status, DEPLOYMENT_COOLDOWN_IN_SLOTS},
     },
-    solana_sdk::{
-        account::{AccountSharedData, WritableAccount},
-        program_error::ProgramError,
-        pubkey::Pubkey,
-    },
+    solana_sdk::{account::Account, program_error::ProgramError, pubkey::Pubkey},
 };
 
 #[test]
@@ -32,14 +28,11 @@ fn fail_program_not_owned_by_loader() {
 
     // Incorrect owner.
     let mut program_account = loader_v4_state_account(&state, elf);
-    program_account.set_owner(Pubkey::new_unique());
+    program_account.owner = Pubkey::new_unique();
 
     mollusk.process_and_validate_instruction(
         &retract(&program, &authority),
-        &[
-            (program, program_account),
-            (authority, AccountSharedData::default()),
-        ],
+        &[(program, program_account), (authority, Account::default())],
         &[Check::err(ProgramError::InvalidAccountOwner)],
     );
 }
@@ -52,16 +45,12 @@ fn fail_program_invalid_state() {
     let authority = Pubkey::new_unique();
 
     // Invalid state.
-    let mut program_account =
-        AccountSharedData::new(100_000_000_000, 12, &solana_loader_v4_program::id());
-    program_account.set_data_from_slice(&[4; 12]);
+    let mut program_account = Account::new(100_000_000_000, 12, &solana_loader_v4_program::id());
+    program_account.data = vec![4; 12];
 
     mollusk.process_and_validate_instruction(
         &retract(&program, &authority),
-        &[
-            (program, program_account),
-            (authority, AccountSharedData::default()),
-        ],
+        &[(program, program_account), (authority, Account::default())],
         &[Check::err(ProgramError::AccountDataTooSmall)],
     );
 }
@@ -87,7 +76,7 @@ fn fail_program_not_writable() {
         &instruction,
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
         ],
         &[Check::err(ProgramError::InvalidArgument)],
     );
@@ -114,7 +103,7 @@ fn fail_authority_not_signer() {
         &instruction,
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
         ],
         &[Check::err(ProgramError::MissingRequiredSignature)],
     );
@@ -138,7 +127,7 @@ fn fail_authority_mismatch() {
         &retract(&program, &authority),
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
         ],
         &[Check::err(ProgramError::IncorrectAuthority)],
     );
@@ -162,7 +151,7 @@ fn fail_program_finalized() {
         &retract(&program, &authority),
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
         ],
         &[Check::err(ProgramError::Immutable)],
     );
@@ -187,7 +176,7 @@ fn fail_program_deployed_in_same_slot() {
         &retract(&program, &authority),
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
         ],
         &[Check::err(ProgramError::InvalidArgument)],
     );
@@ -212,7 +201,7 @@ fn fail_program_not_deployed() {
         &retract(&program, &authority),
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
         ],
         &[Check::err(ProgramError::InvalidArgument)],
     );
@@ -250,7 +239,7 @@ fn success() {
         &retract(&program, &authority),
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
         ],
         &[
             Check::success(),

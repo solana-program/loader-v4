@@ -9,11 +9,7 @@ use {
         instruction::deploy,
         state::{LoaderV4State, LoaderV4Status, DEPLOYMENT_COOLDOWN_IN_SLOTS},
     },
-    solana_sdk::{
-        account::{AccountSharedData, WritableAccount},
-        program_error::ProgramError,
-        pubkey::Pubkey,
-    },
+    solana_sdk::{account::Account, program_error::ProgramError, pubkey::Pubkey},
 };
 
 #[test]
@@ -32,14 +28,11 @@ fn fail_program_not_owned_by_loader() {
 
     // Incorrect owner.
     let mut program_account = loader_v4_state_account(&state, elf);
-    program_account.set_owner(Pubkey::new_unique());
+    program_account.owner = Pubkey::new_unique();
 
     mollusk.process_and_validate_instruction(
         &deploy(&program, &authority, None),
-        &[
-            (program, program_account),
-            (authority, AccountSharedData::default()),
-        ],
+        &[(program, program_account), (authority, Account::default())],
         &[Check::err(ProgramError::InvalidAccountOwner)],
     );
 }
@@ -52,16 +45,12 @@ fn fail_program_invalid_state() {
     let authority = Pubkey::new_unique();
 
     // Invalid state.
-    let mut program_account =
-        AccountSharedData::new(100_000_000_000, 12, &solana_loader_v4_program::id());
-    program_account.set_data_from_slice(&[4; 12]);
+    let mut program_account = Account::new(100_000_000_000, 12, &solana_loader_v4_program::id());
+    program_account.data = vec![4; 12];
 
     mollusk.process_and_validate_instruction(
         &deploy(&program, &authority, None),
-        &[
-            (program, program_account),
-            (authority, AccountSharedData::default()),
-        ],
+        &[(program, program_account), (authority, Account::default())],
         &[Check::err(ProgramError::AccountDataTooSmall)],
     );
 }
@@ -87,7 +76,7 @@ fn fail_program_not_writable() {
         &instruction,
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
         ],
         &[Check::err(ProgramError::InvalidArgument)],
     );
@@ -114,7 +103,7 @@ fn fail_authority_not_signer() {
         &instruction,
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
         ],
         &[Check::err(ProgramError::MissingRequiredSignature)],
     );
@@ -138,7 +127,7 @@ fn fail_authority_mismatch() {
         &deploy(&program, &authority, None),
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
         ],
         &[Check::err(ProgramError::IncorrectAuthority)],
     );
@@ -162,7 +151,7 @@ fn fail_program_finalized() {
         &deploy(&program, &authority, None),
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
         ],
         &[Check::err(ProgramError::Immutable)],
     );
@@ -187,7 +176,7 @@ fn fail_program_deployed_in_same_slot() {
         &deploy(&program, &authority, None),
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
         ],
         &[Check::err(ProgramError::InvalidArgument)],
     );
@@ -211,7 +200,7 @@ fn fail_program_not_retracted() {
         &deploy(&program, &authority, None),
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
         ],
         &[Check::err(ProgramError::InvalidArgument)],
     );
@@ -249,7 +238,7 @@ fn success() {
         &deploy(&program, &authority, None),
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
         ],
         &[
             Check::success(),
@@ -263,7 +252,7 @@ fn success() {
 
     // Change the program to `Retracted` in-line.
     let mut program_account = result.get_account(&program).unwrap().clone();
-    program_account.data_as_mut_slice()[40] = LoaderV4Status::Retracted as u8;
+    program_account.data.as_mut_slice()[40] = LoaderV4Status::Retracted as u8;
 
     let check_data = {
         let mut data = vec![0; LoaderV4State::program_data_offset()];
@@ -280,10 +269,7 @@ fn success() {
 
     mollusk.process_and_validate_instruction(
         &deploy(&program, &authority, None),
-        &[
-            (program, program_account),
-            (authority, AccountSharedData::default()),
-        ],
+        &[(program, program_account), (authority, Account::default())],
         &[
             Check::success(),
             Check::compute_units(1_057),
@@ -317,7 +303,7 @@ fn fail_source_program_not_retracted() {
         &deploy(&program, &authority, Some(&source)),
         &[
             (program, loader_v4_state_account(&state, &[])),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
             (source, loader_v4_state_account(&source_state, source_elf)),
         ],
         &[Check::err(ProgramError::InvalidArgument)],
@@ -347,13 +333,13 @@ fn fail_source_program_not_owned_by_loader() {
 
     // Incorrect owner.
     let mut source_account = loader_v4_state_account(&source_state, source_elf);
-    source_account.set_owner(Pubkey::new_unique());
+    source_account.owner = Pubkey::new_unique();
 
     mollusk.process_and_validate_instruction(
         &deploy(&program, &authority, Some(&source)),
         &[
             (program, loader_v4_state_account(&state, &[])),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
             (source, source_account),
         ],
         &[Check::err(ProgramError::InvalidAccountOwner)],
@@ -375,15 +361,14 @@ fn fail_source_program_invalid_state() {
     };
 
     // Invalid state.
-    let mut source_account =
-        AccountSharedData::new(100_000_000_000, 12, &solana_loader_v4_program::id());
-    source_account.set_data_from_slice(&[4; 12]);
+    let mut source_account = Account::new(100_000_000_000, 12, &solana_loader_v4_program::id());
+    source_account.data = vec![4; 12];
 
     mollusk.process_and_validate_instruction(
         &deploy(&program, &authority, Some(&source)),
         &[
             (program, loader_v4_state_account(&state, &[])),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
             (source, source_account),
         ],
         &[Check::err(ProgramError::AccountDataTooSmall)],
@@ -418,7 +403,7 @@ fn fail_source_program_not_writable() {
         &instruction,
         &[
             (program, loader_v4_state_account(&state, &[])),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
             (source, loader_v4_state_account(&source_state, source_elf)),
         ],
         &[Check::err(ProgramError::InvalidArgument)],
@@ -453,7 +438,7 @@ fn fail_source_authority_not_signer() {
         &instruction,
         &[
             (program, loader_v4_state_account(&state, &[])),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
             (source, loader_v4_state_account(&source_state, source_elf)),
         ],
         &[Check::err(ProgramError::MissingRequiredSignature)],
@@ -485,7 +470,7 @@ fn fail_source_authority_mismatch() {
         &deploy(&program, &authority, Some(&source)),
         &[
             (program, loader_v4_state_account(&state, &[])),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
             (source, loader_v4_state_account(&source_state, source_elf)),
         ],
         &[Check::err(ProgramError::IncorrectAuthority)],
@@ -517,7 +502,7 @@ fn fail_source_program_finalized() {
         &deploy(&program, &authority, Some(&source)),
         &[
             (program, loader_v4_state_account(&state, &[])),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
             (source, loader_v4_state_account(&source_state, source_elf)),
         ],
         &[Check::err(ProgramError::Immutable)],
@@ -563,7 +548,7 @@ fn success_source_program() {
         &deploy(&program, &authority, Some(&source)),
         &[
             (program, loader_v4_state_account(&state, &[])),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
             (source, loader_v4_state_account(&source_state, source_elf)),
         ],
         &[
@@ -586,7 +571,7 @@ fn success_source_program() {
 
     // Change the program to `Retracted` in-line.
     let mut program_account = result.get_account(&program).unwrap().clone();
-    program_account.data_as_mut_slice()[40] = LoaderV4Status::Retracted as u8;
+    program_account.data.as_mut_slice()[40] = LoaderV4Status::Retracted as u8;
 
     let check_data = {
         let mut data = vec![0; LoaderV4State::program_data_offset()];
@@ -605,7 +590,7 @@ fn success_source_program() {
         &deploy(&program, &authority, Some(&source)),
         &[
             (program, program_account),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
             (source, loader_v4_state_account(&source_state, source_elf)),
         ],
         &[
