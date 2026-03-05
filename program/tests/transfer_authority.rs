@@ -267,7 +267,7 @@ fn success() {
         ],
         &[
             Check::success(),
-            Check::compute_units(1_035),
+            Check::compute_units(873),
             Check::account(&program).data(&check_data).build(),
         ],
     );

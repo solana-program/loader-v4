@@ -242,7 +242,7 @@ fn success() {
         ],
         &[
             Check::success(),
-            Check::compute_units(1_057),
+            Check::compute_units(893),
             Check::account(&program).data(&check_data).build(),
         ],
     );
@@ -272,7 +272,7 @@ fn success() {
         &[(program, program_account), (authority, Account::default())],
         &[
             Check::success(),
-            Check::compute_units(1_057),
+            Check::compute_units(893),
             Check::account(&program).data(&check_data).build(),
         ],
     );
@@ -553,7 +553,7 @@ fn success_source_program() {
         ],
         &[
             Check::success(),
-            Check::compute_units(2_121),
+            Check::compute_units(1_907),
             Check::account(&program).data(&check_data).build(),
             Check::account(&source).data(&[]).build(),
         ],
@@ -595,7 +595,7 @@ fn success_source_program() {
         ],
         &[
             Check::success(),
-            Check::compute_units(2_048),
+            Check::compute_units(1_833),
             Check::account(&program).data(&check_data).build(),
             Check::account(&source).data(&[]).build(),
         ],

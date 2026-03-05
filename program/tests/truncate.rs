@@ -165,7 +165,7 @@ fn success_initialization() {
         ],
         &[
             Check::success(),
-            Check::compute_units(1_121),
+            Check::compute_units(1_107),
             Check::account(&program).data(&check_data).build(),
         ],
     );
@@ -450,7 +450,7 @@ fn success() {
         &[(program, program_account), (authority, Account::default())],
         &[
             Check::success(),
-            Check::compute_units(1_217),
+            Check::compute_units(1_166),
             Check::account(&program).data(&check_data).build(),
         ],
     );
@@ -483,7 +483,7 @@ fn success() {
         ],
         &[
             Check::success(),
-            Check::compute_units(1_465),
+            Check::compute_units(1_399),
             Check::account(&program).data(&check_data).build(),
             Check::account(&destination)
                 .lamports(expected_destination_lamports)
