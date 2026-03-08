@@ -9,11 +9,7 @@ use {
         instruction::transfer_authority,
         state::{LoaderV4State, LoaderV4Status},
     },
-    solana_sdk::{
-        account::{AccountSharedData, WritableAccount},
-        program_error::ProgramError,
-        pubkey::Pubkey,
-    },
+    solana_sdk::{account::Account, program_error::ProgramError, pubkey::Pubkey},
 };
 
 #[test]
@@ -33,14 +29,14 @@ fn fail_program_not_owned_by_loader() {
 
     // Incorrect owner.
     let mut program_account = loader_v4_state_account(&state, elf);
-    program_account.set_owner(Pubkey::new_unique());
+    program_account.owner = Pubkey::new_unique();
 
     mollusk.process_and_validate_instruction(
         &transfer_authority(&program, &old_authority, &new_authority),
         &[
             (program, program_account),
-            (old_authority, AccountSharedData::default()),
-            (new_authority, AccountSharedData::default()),
+            (old_authority, Account::default()),
+            (new_authority, Account::default()),
         ],
         &[Check::err(ProgramError::InvalidAccountOwner)],
     );
@@ -55,16 +51,15 @@ fn fail_program_invalid_state() {
     let new_authority = Pubkey::new_unique();
 
     // Invalid state.
-    let mut program_account =
-        AccountSharedData::new(100_000_000_000, 12, &solana_loader_v4_program::id());
-    program_account.set_data_from_slice(&[4; 12]);
+    let mut program_account = Account::new(100_000_000_000, 12, &solana_loader_v4_program::id());
+    program_account.data = vec![4; 12];
 
     mollusk.process_and_validate_instruction(
         &transfer_authority(&program, &old_authority, &new_authority),
         &[
             (program, program_account),
-            (old_authority, AccountSharedData::default()),
-            (new_authority, AccountSharedData::default()),
+            (old_authority, Account::default()),
+            (new_authority, Account::default()),
         ],
         &[Check::err(ProgramError::AccountDataTooSmall)],
     );
@@ -92,8 +87,8 @@ fn fail_program_not_writable() {
         &instruction,
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (old_authority, AccountSharedData::default()),
-            (new_authority, AccountSharedData::default()),
+            (old_authority, Account::default()),
+            (new_authority, Account::default()),
         ],
         &[Check::err(ProgramError::InvalidArgument)],
     );
@@ -121,8 +116,8 @@ fn fail_authority_not_signer() {
         &instruction,
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (old_authority, AccountSharedData::default()),
-            (new_authority, AccountSharedData::default()),
+            (old_authority, Account::default()),
+            (new_authority, Account::default()),
         ],
         &[Check::err(ProgramError::MissingRequiredSignature)],
     );
@@ -147,8 +142,8 @@ fn fail_authority_mismatch() {
         &transfer_authority(&program, &old_authority, &new_authority),
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (old_authority, AccountSharedData::default()),
-            (new_authority, AccountSharedData::default()),
+            (old_authority, Account::default()),
+            (new_authority, Account::default()),
         ],
         &[Check::err(ProgramError::IncorrectAuthority)],
     );
@@ -173,8 +168,8 @@ fn fail_program_finalized() {
         &transfer_authority(&program, &old_authority, &new_authority),
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (old_authority, AccountSharedData::default()),
-            (new_authority, AccountSharedData::default()),
+            (old_authority, Account::default()),
+            (new_authority, Account::default()),
         ],
         &[Check::err(ProgramError::Immutable)],
     );
@@ -202,8 +197,8 @@ fn fail_new_authority_not_signer() {
         &instruction,
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (old_authority, AccountSharedData::default()),
-            (new_authority, AccountSharedData::default()),
+            (old_authority, Account::default()),
+            (new_authority, Account::default()),
         ],
         &[Check::err(ProgramError::MissingRequiredSignature)],
     );
@@ -228,8 +223,8 @@ fn fail_no_change() {
         &transfer_authority(&program, &old_authority, &new_authority),
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (old_authority, AccountSharedData::default()),
-            (new_authority, AccountSharedData::default()),
+            (old_authority, Account::default()),
+            (new_authority, Account::default()),
         ],
         &[Check::err(ProgramError::InvalidArgument)],
     );
@@ -267,12 +262,12 @@ fn success() {
         &transfer_authority(&program, &old_authority, &new_authority),
         &[
             (program, loader_v4_state_account(&state, elf)),
-            (old_authority, AccountSharedData::default()),
-            (new_authority, AccountSharedData::default()),
+            (old_authority, Account::default()),
+            (new_authority, Account::default()),
         ],
         &[
             Check::success(),
-            Check::compute_units(1_035),
+            Check::compute_units(873),
             Check::account(&program).data(&check_data).build(),
         ],
     );

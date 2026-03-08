@@ -4,21 +4,14 @@
 use {
     mollusk_svm::Mollusk,
     solana_loader_v4_program::state::LoaderV4State,
-    solana_sdk::{account::AccountSharedData, rent::Rent, system_program},
+    solana_sdk::{account::Account, rent::Rent},
 };
 
 pub fn setup() -> Mollusk {
     Mollusk::new(&solana_loader_v4_program::id(), "solana_loader_v4_program")
 }
 
-pub fn system_account_with_lamports(lamports: u64) -> AccountSharedData {
-    AccountSharedData::new(lamports, 0, &system_program::id())
-}
-
-pub fn loader_v4_state_account(
-    state: &LoaderV4State,
-    additional_bytes: &[u8],
-) -> AccountSharedData {
+pub fn loader_v4_state_account(state: &LoaderV4State, additional_bytes: &[u8]) -> Account {
     let mut data = vec![0; LoaderV4State::program_data_offset()];
     {
         *LoaderV4State::unpack_mut(&mut data).unwrap() = *state;
@@ -28,8 +21,8 @@ pub fn loader_v4_state_account(
     let space = data.len();
     let lamports = Rent::default().minimum_balance(space);
 
-    let mut account = AccountSharedData::new(lamports, space, &solana_loader_v4_program::id());
-    account.set_data_from_slice(&data);
+    let mut account = Account::new(lamports, space, &solana_loader_v4_program::id());
+    account.data = data;
 
     account
 }

@@ -167,12 +167,10 @@ fn process_truncate(program_id: &Pubkey, accounts: &[AccountInfo], new_size: u32
     }
 
     if new_size == 0 {
-        program_info.realloc(0, true)?;
+        program_info.resize(0)?;
     } else {
-        program_info.realloc(
-            LoaderV4State::program_data_offset().saturating_add(new_size as usize),
-            true,
-        )?;
+        program_info
+            .resize(LoaderV4State::program_data_offset().saturating_add(new_size as usize))?;
         if is_initialization {
             let mut data = program_info.try_borrow_mut_data()?;
             let state = LoaderV4State::unpack_mut(&mut data)?;
@@ -249,13 +247,13 @@ fn process_deploy(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResul
 
         {
             if program_info.data_len() < source_info.data_len() {
-                program_info.realloc(source_info.data_len(), true)?;
+                program_info.resize(source_info.data_len())?;
             }
             let mut program_data = program_info.try_borrow_mut_data()?;
             let source_data = source_info.try_borrow_mut_data()?;
             program_data[..].copy_from_slice(&source_data[..]);
         }
-        source_info.realloc(0, true)?;
+        source_info.resize(0)?;
 
         **program_info.try_borrow_mut_lamports()? = new_program_lamports;
         **source_info.try_borrow_mut_lamports()? = new_source_lamports;

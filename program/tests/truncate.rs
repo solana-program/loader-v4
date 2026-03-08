@@ -9,11 +9,7 @@ use {
         instruction::truncate,
         state::{LoaderV4State, LoaderV4Status},
     },
-    solana_sdk::{
-        account::{AccountSharedData, ReadableAccount, WritableAccount},
-        program_error::ProgramError,
-        pubkey::Pubkey,
-    },
+    solana_sdk::{account::Account, program_error::ProgramError, pubkey::Pubkey},
 };
 
 #[test]
@@ -31,15 +27,12 @@ fn fail_initialization_program_not_owned_by_loader() {
 
     // Incorrect owner.
     let mut program_account =
-        AccountSharedData::new(rent_exempt_lamports, 0, &solana_loader_v4_program::id());
-    program_account.set_owner(Pubkey::new_unique());
+        Account::new(rent_exempt_lamports, 0, &solana_loader_v4_program::id());
+    program_account.owner = Pubkey::new_unique();
 
     mollusk.process_and_validate_instruction(
         &truncate(&program, &authority, None, new_size as u32),
-        &[
-            (program, program_account),
-            (authority, AccountSharedData::default()),
-        ],
+        &[(program, program_account), (authority, Account::default())],
         &[Check::err(ProgramError::InvalidAccountOwner)],
     );
 }
@@ -65,9 +58,9 @@ fn fail_initialization_program_not_writable() {
         &[
             (
                 program,
-                AccountSharedData::new(rent_exempt_lamports, 0, &solana_loader_v4_program::id()),
+                Account::new(rent_exempt_lamports, 0, &solana_loader_v4_program::id()),
             ),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
         ],
         &[Check::err(ProgramError::InvalidArgument)],
     );
@@ -94,9 +87,9 @@ fn fail_initialization_program_not_signer() {
         &[
             (
                 program,
-                AccountSharedData::new(rent_exempt_lamports, 0, &solana_loader_v4_program::id()),
+                Account::new(rent_exempt_lamports, 0, &solana_loader_v4_program::id()),
             ),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
         ],
         &[Check::err(ProgramError::MissingRequiredSignature)],
     );
@@ -123,9 +116,9 @@ fn fail_initialization_authority_not_signer() {
         &[
             (
                 program,
-                AccountSharedData::new(rent_exempt_lamports, 0, &solana_loader_v4_program::id()),
+                Account::new(rent_exempt_lamports, 0, &solana_loader_v4_program::id()),
             ),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
         ],
         &[Check::err(ProgramError::MissingRequiredSignature)],
     );
@@ -166,13 +159,13 @@ fn success_initialization() {
         &[
             (
                 program,
-                AccountSharedData::new(rent_exempt_lamports, 0, &solana_loader_v4_program::id()),
+                Account::new(rent_exempt_lamports, 0, &solana_loader_v4_program::id()),
             ),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
         ],
         &[
             Check::success(),
-            Check::compute_units(1_121),
+            Check::compute_units(1_107),
             Check::account(&program).data(&check_data).build(),
         ],
     );
@@ -197,14 +190,11 @@ fn fail_program_not_owned_by_loader() {
 
     // Incorrect owner.
     let mut program_account = loader_v4_state_account(&state, uninitialized_data);
-    program_account.set_owner(Pubkey::new_unique());
+    program_account.owner = Pubkey::new_unique();
 
     mollusk.process_and_validate_instruction(
         &truncate(&program, &authority, None, new_size as u32),
-        &[
-            (program, program_account),
-            (authority, AccountSharedData::default()),
-        ],
+        &[(program, program_account), (authority, Account::default())],
         &[Check::err(ProgramError::InvalidAccountOwner)],
     );
 }
@@ -238,7 +228,7 @@ fn fail_program_not_writable() {
         &instruction,
         &[
             (program, loader_v4_state_account(&state, uninitialized_data)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
         ],
         &[Check::err(ProgramError::InvalidArgument)],
     );
@@ -268,7 +258,7 @@ fn fail_authority_not_signer() {
         &instruction,
         &[
             (program, loader_v4_state_account(&state, uninitialized_data)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
         ],
         &[Check::err(ProgramError::MissingRequiredSignature)],
     );
@@ -295,7 +285,7 @@ fn fail_authority_mismatch() {
         &truncate(&program, &authority, None, new_size as u32),
         &[
             (program, loader_v4_state_account(&state, uninitialized_data)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
         ],
         &[Check::err(ProgramError::IncorrectAuthority)],
     );
@@ -322,7 +312,7 @@ fn fail_program_finalized() {
         &truncate(&program, &authority, None, new_size as u32),
         &[
             (program, loader_v4_state_account(&state, uninitialized_data)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
         ],
         &[Check::err(ProgramError::Immutable)],
     );
@@ -349,7 +339,7 @@ fn fail_program_not_retracted() {
         &truncate(&program, &authority, None, new_size as u32),
         &[
             (program, loader_v4_state_account(&state, uninitialized_data)),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
         ],
         &[Check::err(ProgramError::InvalidArgument)],
     );
@@ -380,7 +370,7 @@ fn fail_program_insufficient_lamports() {
                 loader_v4_state_account(&state, uninitialized_data), /* No additional
                                                                       * lamports. */
             ),
-            (authority, AccountSharedData::default()),
+            (authority, Account::default()),
         ],
         &[Check::err(ProgramError::InsufficientFunds)],
     );
@@ -411,8 +401,8 @@ fn fail_destination_not_writable() {
         &instruction,
         &[
             (program, loader_v4_state_account(&state, uninitialized_data)),
-            (authority, AccountSharedData::default()),
-            (destination, AccountSharedData::default()),
+            (authority, Account::default()),
+            (destination, Account::default()),
         ],
         &[Check::err(ProgramError::InvalidArgument)],
     );
@@ -451,19 +441,16 @@ fn success() {
         .minimum_balance(LoaderV4State::program_data_offset().saturating_add(new_size));
 
     let mut program_account = loader_v4_state_account(&state, uninitialized_data);
-    program_account.set_lamports(rent_exempt_lamports);
+    program_account.lamports = rent_exempt_lamports;
 
     check_data.extend_from_slice(&[0; SIZE_TO_ADD]);
 
     let result = mollusk.process_and_validate_instruction(
         &truncate(&program, &authority, None, new_size as u32),
-        &[
-            (program, program_account),
-            (authority, AccountSharedData::default()),
-        ],
+        &[(program, program_account), (authority, Account::default())],
         &[
             Check::success(),
-            Check::compute_units(1_217),
+            Check::compute_units(1_166),
             Check::account(&program).data(&check_data).build(),
         ],
     );
@@ -482,7 +469,7 @@ fn success() {
 
     let program_account = result.get_account(&program).unwrap().clone();
     let expected_destination_lamports = program_account
-        .lamports()
+        .lamports
         .saturating_sub(rent_exempt_lamports);
 
     check_data.truncate(LoaderV4State::program_data_offset().saturating_add(new_size));
@@ -491,12 +478,12 @@ fn success() {
         &truncate(&program, &authority, Some(&destination), new_size as u32),
         &[
             (program, program_account),
-            (authority, AccountSharedData::default()),
-            (destination, AccountSharedData::default()),
+            (authority, Account::default()),
+            (destination, Account::default()),
         ],
         &[
             Check::success(),
-            Check::compute_units(1_465),
+            Check::compute_units(1_399),
             Check::account(&program).data(&check_data).build(),
             Check::account(&destination)
                 .lamports(expected_destination_lamports)
