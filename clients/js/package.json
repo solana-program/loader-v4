@@ -21,7 +21,8 @@
   "scripts": {
     "build": "rimraf dist && tsup && tsc -p ./tsconfig.declarations.json",
     "build:docs": "typedoc",
-    "test": "ava",
+    "dev": "vitest",
+    "test": "vitest run",
     "lint": "eslint --ext js,ts,tsx src",
     "lint:fix": "eslint --fix --ext js,ts,tsx src",
     "format": "prettier --check src test",
@@ -37,31 +38,19 @@
     "@solana/kit": "^6.0.0"
   },
   "devDependencies": {
-    "@ava/typescript": "^4.1.0",
     "@solana/eslint-config-solana": "^3.0.0",
     "@solana/kit": "^6.0.0",
     "@types/node": "^20",
     "@typescript-eslint/eslint-plugin": "^7.3.1",
     "@typescript-eslint/parser": "^7.3.1",
-    "ava": "^6.1.2",
     "eslint": "^8.57.0",
     "prettier": "^3.2.5",
     "rimraf": "^5.0.5",
     "tsup": "^8.0.2",
     "typedoc": "^0.25.12",
     "typedoc-plugin-missing-exports": "^2.2.0",
-    "typescript": "^5.4.2"
-  },
-  "ava": {
-    "nodeArguments": [
-      "--no-warnings"
-    ],
-    "typescript": {
-      "compile": false,
-      "rewritePaths": {
-        "test/": "dist/test/"
-      }
-    }
+    "typescript": "^5.4.2",
+    "vitest": "^4.0.15"
   },
   "packageManager": "pnpm@9.1.0"
 }
