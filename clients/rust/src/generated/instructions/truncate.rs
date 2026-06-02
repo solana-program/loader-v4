@@ -12,11 +12,11 @@ pub const TRUNCATE_DISCRIMINATOR: u8 = 1;
 #[derive(Debug)]
 pub struct Truncate {
     /// Program account to change the size of.
-    pub program: solana_pubkey::Pubkey,
+    pub program: solana_address::Address,
     /// Program authority.
-    pub authority: solana_pubkey::Pubkey,
+    pub authority: solana_address::Address,
     /// Destination account for reclaimed lamports (optional).
-    pub destination: Option<solana_pubkey::Pubkey>,
+    pub destination: Option<solana_address::Address>,
 }
 
 impl Truncate {
@@ -58,7 +58,6 @@ impl Truncate {
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TruncateInstructionData {
     discriminator: u8,
 }
@@ -80,7 +79,6 @@ impl Default for TruncateInstructionData {
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TruncateInstructionArgs {
     pub new_size: u32,
 }
@@ -100,9 +98,9 @@ impl TruncateInstructionArgs {
 ///   2. `[writable, optional]` destination
 #[derive(Clone, Debug, Default)]
 pub struct TruncateBuilder {
-    program: Option<solana_pubkey::Pubkey>,
-    authority: Option<solana_pubkey::Pubkey>,
-    destination: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_address::Address>,
+    authority: Option<solana_address::Address>,
+    destination: Option<solana_address::Address>,
     new_size: Option<u32>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
@@ -113,20 +111,20 @@ impl TruncateBuilder {
     }
     /// Program account to change the size of.
     #[inline(always)]
-    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_address::Address) -> &mut Self {
         self.program = Some(program);
         self
     }
     /// Program authority.
     #[inline(always)]
-    pub fn authority(&mut self, authority: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn authority(&mut self, authority: solana_address::Address) -> &mut Self {
         self.authority = Some(authority);
         self
     }
     /// `[optional account]`
     /// Destination account for reclaimed lamports (optional).
     #[inline(always)]
-    pub fn destination(&mut self, destination: Option<solana_pubkey::Pubkey>) -> &mut Self {
+    pub fn destination(&mut self, destination: Option<solana_address::Address>) -> &mut Self {
         self.destination = destination;
         self
     }

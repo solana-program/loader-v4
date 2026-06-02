@@ -12,11 +12,11 @@ pub const TRANSFER_AUTHORITY_DISCRIMINATOR: u8 = 4;
 #[derive(Debug)]
 pub struct TransferAuthority {
     /// Program account to change the authority of.
-    pub program: solana_pubkey::Pubkey,
+    pub program: solana_address::Address,
     /// Current program authority.
-    pub current_authority: solana_pubkey::Pubkey,
+    pub current_authority: solana_address::Address,
     /// New program authority.
-    pub new_authority: solana_pubkey::Pubkey,
+    pub new_authority: solana_address::Address,
 }
 
 impl TransferAuthority {
@@ -53,7 +53,6 @@ impl TransferAuthority {
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TransferAuthorityInstructionData {
     discriminator: u8,
 }
@@ -83,9 +82,9 @@ impl Default for TransferAuthorityInstructionData {
 ///   2. `[signer]` new_authority
 #[derive(Clone, Debug, Default)]
 pub struct TransferAuthorityBuilder {
-    program: Option<solana_pubkey::Pubkey>,
-    current_authority: Option<solana_pubkey::Pubkey>,
-    new_authority: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_address::Address>,
+    current_authority: Option<solana_address::Address>,
+    new_authority: Option<solana_address::Address>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
@@ -95,19 +94,19 @@ impl TransferAuthorityBuilder {
     }
     /// Program account to change the authority of.
     #[inline(always)]
-    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_address::Address) -> &mut Self {
         self.program = Some(program);
         self
     }
     /// Current program authority.
     #[inline(always)]
-    pub fn current_authority(&mut self, current_authority: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn current_authority(&mut self, current_authority: solana_address::Address) -> &mut Self {
         self.current_authority = Some(current_authority);
         self
     }
     /// New program authority.
     #[inline(always)]
-    pub fn new_authority(&mut self, new_authority: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn new_authority(&mut self, new_authority: solana_address::Address) -> &mut Self {
         self.new_authority = Some(new_authority);
         self
     }

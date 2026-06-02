@@ -12,9 +12,9 @@ pub const RETRACT_DISCRIMINATOR: u8 = 3;
 #[derive(Debug)]
 pub struct Retract {
     /// Program account to retract.
-    pub program: solana_pubkey::Pubkey,
+    pub program: solana_address::Address,
     /// Program authority.
-    pub authority: solana_pubkey::Pubkey,
+    pub authority: solana_address::Address,
 }
 
 impl Retract {
@@ -45,7 +45,6 @@ impl Retract {
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct RetractInstructionData {
     discriminator: u8,
 }
@@ -74,8 +73,8 @@ impl Default for RetractInstructionData {
 ///   1. `[signer]` authority
 #[derive(Clone, Debug, Default)]
 pub struct RetractBuilder {
-    program: Option<solana_pubkey::Pubkey>,
-    authority: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_address::Address>,
+    authority: Option<solana_address::Address>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
@@ -85,13 +84,13 @@ impl RetractBuilder {
     }
     /// Program account to retract.
     #[inline(always)]
-    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_address::Address) -> &mut Self {
         self.program = Some(program);
         self
     }
     /// Program authority.
     #[inline(always)]
-    pub fn authority(&mut self, authority: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn authority(&mut self, authority: solana_address::Address) -> &mut Self {
         self.authority = Some(authority);
         self
     }

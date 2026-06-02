@@ -12,11 +12,11 @@ pub const FINALIZE_DISCRIMINATOR: u8 = 5;
 #[derive(Debug)]
 pub struct Finalize {
     /// Program account to finalize.
-    pub program: solana_pubkey::Pubkey,
+    pub program: solana_address::Address,
     /// Program authority.
-    pub authority: solana_pubkey::Pubkey,
+    pub authority: solana_address::Address,
     /// The next version of the program (can be itself).
-    pub next_version: solana_pubkey::Pubkey,
+    pub next_version: solana_address::Address,
 }
 
 impl Finalize {
@@ -51,7 +51,6 @@ impl Finalize {
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FinalizeInstructionData {
     discriminator: u8,
 }
@@ -81,9 +80,9 @@ impl Default for FinalizeInstructionData {
 ///   2. `[]` next_version
 #[derive(Clone, Debug, Default)]
 pub struct FinalizeBuilder {
-    program: Option<solana_pubkey::Pubkey>,
-    authority: Option<solana_pubkey::Pubkey>,
-    next_version: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_address::Address>,
+    authority: Option<solana_address::Address>,
+    next_version: Option<solana_address::Address>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
@@ -93,19 +92,19 @@ impl FinalizeBuilder {
     }
     /// Program account to finalize.
     #[inline(always)]
-    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_address::Address) -> &mut Self {
         self.program = Some(program);
         self
     }
     /// Program authority.
     #[inline(always)]
-    pub fn authority(&mut self, authority: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn authority(&mut self, authority: solana_address::Address) -> &mut Self {
         self.authority = Some(authority);
         self
     }
     /// The next version of the program (can be itself).
     #[inline(always)]
-    pub fn next_version(&mut self, next_version: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn next_version(&mut self, next_version: solana_address::Address) -> &mut Self {
         self.next_version = Some(next_version);
         self
     }

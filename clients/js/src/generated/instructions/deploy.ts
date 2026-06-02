@@ -12,6 +12,8 @@ import {
   getStructEncoder,
   getU8Decoder,
   getU8Encoder,
+  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+  SolanaError,
   transformEncoder,
   type AccountMeta,
   type AccountSignerMeta,
@@ -27,12 +29,15 @@ import {
   type TransactionSigner,
   type WritableAccount,
 } from '@solana/kit';
+import {
+  getAccountMetaFactory,
+  type ResolvedInstructionAccount,
+} from '@solana/kit/program-client-core';
 import { LOADER_V4_PROGRAM_ADDRESS } from '../programs';
-import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const DEPLOY_DISCRIMINATOR = 2;
 
-export function getDeployDiscriminatorBytes() {
+export function getDeployDiscriminatorBytes(): ReadonlyUint8Array {
   return getU8Encoder().encode(DEPLOY_DISCRIMINATOR);
 }
 
@@ -123,15 +128,15 @@ export function getDeployInstruction<
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
-    ResolvedAccount
+    ResolvedInstructionAccount
   >;
 
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   return Object.freeze({
     accounts: [
-      getAccountMeta(accounts.program),
-      getAccountMeta(accounts.authority),
-      getAccountMeta(accounts.source),
+      getAccountMeta('program', accounts.program),
+      getAccountMeta('authority', accounts.authority),
+      getAccountMeta('source', accounts.source),
     ],
     data: getDeployInstructionDataEncoder().encode({}),
     programAddress,
@@ -168,8 +173,13 @@ export function parseDeployInstruction<
     InstructionWithData<ReadonlyUint8Array>
 ): ParsedDeployInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 3) {
-    // TODO: Coded error.
-    throw new Error('Not enough accounts');
+    throw new SolanaError(
+      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+      {
+        actualAccountMetas: instruction.accounts.length,
+        expectedAccountMetas: 3,
+      }
+    );
   }
   let accountIndex = 0;
   const getNextAccount = () => {

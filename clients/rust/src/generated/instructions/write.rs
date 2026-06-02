@@ -12,9 +12,9 @@ pub const WRITE_DISCRIMINATOR: u8 = 0;
 #[derive(Debug)]
 pub struct Write {
     /// Program account to write to.
-    pub program: solana_pubkey::Pubkey,
+    pub program: solana_address::Address,
     /// Program authority.
-    pub authority: solana_pubkey::Pubkey,
+    pub authority: solana_address::Address,
 }
 
 impl Write {
@@ -48,7 +48,6 @@ impl Write {
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct WriteInstructionData {
     discriminator: u8,
 }
@@ -70,7 +69,6 @@ impl Default for WriteInstructionData {
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct WriteInstructionArgs {
     pub offset: u32,
     pub bytes: Vec<u8>,
@@ -90,8 +88,8 @@ impl WriteInstructionArgs {
 ///   1. `[signer]` authority
 #[derive(Clone, Debug, Default)]
 pub struct WriteBuilder {
-    program: Option<solana_pubkey::Pubkey>,
-    authority: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_address::Address>,
+    authority: Option<solana_address::Address>,
     offset: Option<u32>,
     bytes: Option<Vec<u8>>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
@@ -103,13 +101,13 @@ impl WriteBuilder {
     }
     /// Program account to write to.
     #[inline(always)]
-    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_address::Address) -> &mut Self {
         self.program = Some(program);
         self
     }
     /// Program authority.
     #[inline(always)]
-    pub fn authority(&mut self, authority: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn authority(&mut self, authority: solana_address::Address) -> &mut Self {
         self.authority = Some(authority);
         self
     }

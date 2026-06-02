@@ -9,25 +9,47 @@
 import {
   assertIsInstructionWithAccounts,
   containsBytes,
+  extendClient,
   getU8Encoder,
+  SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_INSTRUCTION,
+  SOLANA_ERROR__PROGRAM_CLIENTS__UNRECOGNIZED_INSTRUCTION_TYPE,
+  SolanaError,
   type Address,
+  type ClientWithTransactionPlanning,
+  type ClientWithTransactionSending,
   type Instruction,
   type InstructionWithData,
   type ReadonlyUint8Array,
 } from '@solana/kit';
 import {
+  addSelfPlanAndSendFunctions,
+  type SelfPlanAndSendFunctions,
+} from '@solana/kit/program-client-core';
+import {
+  getDeployInstruction,
+  getFinalizeInstruction,
+  getRetractInstruction,
+  getTransferAuthorityInstruction,
+  getTruncateInstruction,
+  getWriteInstruction,
   parseDeployInstruction,
   parseFinalizeInstruction,
   parseRetractInstruction,
   parseTransferAuthorityInstruction,
   parseTruncateInstruction,
   parseWriteInstruction,
+  type DeployInput,
+  type FinalizeInput,
   type ParsedDeployInstruction,
   type ParsedFinalizeInstruction,
   type ParsedRetractInstruction,
   type ParsedTransferAuthorityInstruction,
   type ParsedTruncateInstruction,
   type ParsedWriteInstruction,
+  type RetractInput,
+  type TransferAuthorityInput,
+  type TruncateInput,
+  type WriteInput,
 } from '../instructions';
 
 export const LOADER_V4_PROGRAM_ADDRESS =
@@ -64,8 +86,9 @@ export function identifyLoaderV4Instruction(
   if (containsBytes(data, getU8Encoder().encode(5), 0)) {
     return LoaderV4Instruction.Finalize;
   }
-  throw new Error(
-    'The provided instruction could not be identified as a loaderV4 instruction.'
+  throw new SolanaError(
+    SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_INSTRUCTION,
+    { instructionData: data, programName: 'loaderV4' }
   );
 }
 
@@ -139,8 +162,64 @@ export function parseLoaderV4Instruction<TProgram extends string>(
       };
     }
     default:
-      throw new Error(
-        `Unrecognized instruction type: ${instructionType as string}`
+      throw new SolanaError(
+        SOLANA_ERROR__PROGRAM_CLIENTS__UNRECOGNIZED_INSTRUCTION_TYPE,
+        { instructionType: instructionType as string, programName: 'loaderV4' }
       );
   }
+}
+
+export type LoaderV4Plugin = { instructions: LoaderV4PluginInstructions };
+
+export type LoaderV4PluginInstructions = {
+  write: (
+    input: WriteInput
+  ) => ReturnType<typeof getWriteInstruction> & SelfPlanAndSendFunctions;
+  truncate: (
+    input: TruncateInput
+  ) => ReturnType<typeof getTruncateInstruction> & SelfPlanAndSendFunctions;
+  deploy: (
+    input: DeployInput
+  ) => ReturnType<typeof getDeployInstruction> & SelfPlanAndSendFunctions;
+  retract: (
+    input: RetractInput
+  ) => ReturnType<typeof getRetractInstruction> & SelfPlanAndSendFunctions;
+  transferAuthority: (
+    input: TransferAuthorityInput
+  ) => ReturnType<typeof getTransferAuthorityInstruction> &
+    SelfPlanAndSendFunctions;
+  finalize: (
+    input: FinalizeInput
+  ) => ReturnType<typeof getFinalizeInstruction> & SelfPlanAndSendFunctions;
+};
+
+export type LoaderV4PluginRequirements = ClientWithTransactionPlanning &
+  ClientWithTransactionSending;
+
+export function loaderV4Program() {
+  return <T extends LoaderV4PluginRequirements>(
+    client: T
+  ): Omit<T, 'loaderV4'> & { loaderV4: LoaderV4Plugin } => {
+    return extendClient(client, {
+      loaderV4: <LoaderV4Plugin>{
+        instructions: {
+          write: (input) =>
+            addSelfPlanAndSendFunctions(client, getWriteInstruction(input)),
+          truncate: (input) =>
+            addSelfPlanAndSendFunctions(client, getTruncateInstruction(input)),
+          deploy: (input) =>
+            addSelfPlanAndSendFunctions(client, getDeployInstruction(input)),
+          retract: (input) =>
+            addSelfPlanAndSendFunctions(client, getRetractInstruction(input)),
+          transferAuthority: (input) =>
+            addSelfPlanAndSendFunctions(
+              client,
+              getTransferAuthorityInstruction(input)
+            ),
+          finalize: (input) =>
+            addSelfPlanAndSendFunctions(client, getFinalizeInstruction(input)),
+        },
+      },
+    });
+  };
 }
