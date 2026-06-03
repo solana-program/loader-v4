@@ -12,12 +12,12 @@ pub const DEPLOY_DISCRIMINATOR: u8 = 2;
 #[derive(Debug)]
 pub struct Deploy {
     /// Program account to deploy.
-    pub program: solana_pubkey::Pubkey,
+    pub program: solana_address::Address,
     /// Program authority.
-    pub authority: solana_pubkey::Pubkey,
+    pub authority: solana_address::Address,
     /// Undeployed source program account to take data and lamports from
     /// (optional).
-    pub source: Option<solana_pubkey::Pubkey>,
+    pub source: Option<solana_address::Address>,
 }
 
 impl Deploy {
@@ -56,7 +56,6 @@ impl Deploy {
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DeployInstructionData {
     discriminator: u8,
 }
@@ -86,9 +85,9 @@ impl Default for DeployInstructionData {
 ///   2. `[writable, optional]` source
 #[derive(Clone, Debug, Default)]
 pub struct DeployBuilder {
-    program: Option<solana_pubkey::Pubkey>,
-    authority: Option<solana_pubkey::Pubkey>,
-    source: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_address::Address>,
+    authority: Option<solana_address::Address>,
+    source: Option<solana_address::Address>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
@@ -98,13 +97,13 @@ impl DeployBuilder {
     }
     /// Program account to deploy.
     #[inline(always)]
-    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_address::Address) -> &mut Self {
         self.program = Some(program);
         self
     }
     /// Program authority.
     #[inline(always)]
-    pub fn authority(&mut self, authority: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn authority(&mut self, authority: solana_address::Address) -> &mut Self {
         self.authority = Some(authority);
         self
     }
@@ -112,7 +111,7 @@ impl DeployBuilder {
     /// Undeployed source program account to take data and lamports from
     /// (optional).
     #[inline(always)]
-    pub fn source(&mut self, source: Option<solana_pubkey::Pubkey>) -> &mut Self {
+    pub fn source(&mut self, source: Option<solana_address::Address>) -> &mut Self {
         self.source = source;
         self
     }

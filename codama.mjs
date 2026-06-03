@@ -23,14 +23,14 @@ export default {
   scripts: {
     js: {
       from: "@codama/renderers-js",
-      args: ["clients/js/src/generated", { prettierOptions }],
+      args: ["clients/js", { kitImportStrategy: "rootOnly", prettierOptions }],
     },
     rust: {
       from: "@codama/renderers-rust",
       args: [
-        "clients/rust/src/generated",
+        "clients/rust",
         {
-          crateFolder: "clients/rust",
+          anchorTraits: false,
           formatCode: true,
           toolchain: getToolchainArgument("format"),
         },

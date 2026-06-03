@@ -12,6 +12,8 @@ import {
   getStructEncoder,
   getU8Decoder,
   getU8Encoder,
+  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+  SolanaError,
   transformEncoder,
   type AccountMeta,
   type AccountSignerMeta,
@@ -27,12 +29,15 @@ import {
   type TransactionSigner,
   type WritableAccount,
 } from '@solana/kit';
+import {
+  getAccountMetaFactory,
+  type ResolvedInstructionAccount,
+} from '@solana/kit/program-client-core';
 import { LOADER_V4_PROGRAM_ADDRESS } from '../programs';
-import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const RETRACT_DISCRIMINATOR = 3;
 
-export function getRetractDiscriminatorBytes() {
+export function getRetractDiscriminatorBytes(): ReadonlyUint8Array {
   return getU8Encoder().encode(RETRACT_DISCRIMINATOR);
 }
 
@@ -109,14 +114,14 @@ export function getRetractInstruction<
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
-    ResolvedAccount
+    ResolvedInstructionAccount
   >;
 
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   return Object.freeze({
     accounts: [
-      getAccountMeta(accounts.program),
-      getAccountMeta(accounts.authority),
+      getAccountMeta('program', accounts.program),
+      getAccountMeta('authority', accounts.authority),
     ],
     data: getRetractInstructionDataEncoder().encode({}),
     programAddress,
@@ -146,8 +151,13 @@ export function parseRetractInstruction<
     InstructionWithData<ReadonlyUint8Array>
 ): ParsedRetractInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 2) {
-    // TODO: Coded error.
-    throw new Error('Not enough accounts');
+    throw new SolanaError(
+      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+      {
+        actualAccountMetas: instruction.accounts.length,
+        expectedAccountMetas: 2,
+      }
+    );
   }
   let accountIndex = 0;
   const getNextAccount = () => {
