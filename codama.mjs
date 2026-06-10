@@ -1,13 +1,17 @@
-import { getToolchainArgument } from "./scripts/utils.mjs";
-import path from "node:path";
+import { execSync } from "node:child_process";
 import fs from "node:fs";
+import path from "node:path";
+
+const nightly = execSync("make --no-print-directory rust-toolchain-nightly")
+  .toString()
+  .trim();
 
 const prettierOptions = JSON.parse(
   fs.readFileSync(path.join("clients", "js", ".prettierrc.json"), "utf-8")
 );
 
 export default {
-  idl: "program/idl.json",
+  idl: "idl.json",
   before: [
     {
       from: "codama#updateProgramsVisitor",
@@ -32,7 +36,7 @@ export default {
         {
           anchorTraits: false,
           formatCode: true,
-          toolchain: getToolchainArgument("format"),
+          toolchain: `+${nightly}`,
         },
       ],
     },

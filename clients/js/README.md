@@ -4,21 +4,19 @@ A generated JavaScript library for the Solana Loader V4 program.
 
 ## Getting started
 
-To build and test your JavaScript client from the root of the repository, you may use the following command.
+To build and test your JavaScript client from the root of the repository, you may use the following command. It starts a local validator, runs the test suite, then stops the validator.
 
 ```sh
-pnpm clients:js:test
+make test-js-clients-js
 ```
-
-This will start a new local validator, if one is not already running, and run the tests for your JavaScript client.
 
 ## Available client scripts.
 
-Alternatively, you can go into the client directory and run the tests directly.
+Alternatively, you can start a validator and run the tests in the client directory directly.
 
 ```sh
 # Start the validator.
-pnpm validator:restart
+make restart-test-validator
 
 # Go into the client directory and run the tests.
 cd clients/js
