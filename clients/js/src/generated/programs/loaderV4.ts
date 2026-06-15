@@ -7,219 +7,165 @@
  */
 
 import {
-  assertIsInstructionWithAccounts,
-  containsBytes,
-  extendClient,
-  getU8Encoder,
-  SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_INSTRUCTION,
-  SOLANA_ERROR__PROGRAM_CLIENTS__UNRECOGNIZED_INSTRUCTION_TYPE,
-  SolanaError,
-  type Address,
-  type ClientWithTransactionPlanning,
-  type ClientWithTransactionSending,
-  type Instruction,
-  type InstructionWithData,
-  type ReadonlyUint8Array,
+    assertIsInstructionWithAccounts,
+    containsBytes,
+    extendClient,
+    getU8Encoder,
+    SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_INSTRUCTION,
+    SOLANA_ERROR__PROGRAM_CLIENTS__UNRECOGNIZED_INSTRUCTION_TYPE,
+    SolanaError,
+    type Address,
+    type ClientWithTransactionPlanning,
+    type ClientWithTransactionSending,
+    type Instruction,
+    type InstructionWithData,
+    type ReadonlyUint8Array,
 } from '@solana/kit';
+import { addSelfPlanAndSendFunctions, type SelfPlanAndSendFunctions } from '@solana/kit/program-client-core';
 import {
-  addSelfPlanAndSendFunctions,
-  type SelfPlanAndSendFunctions,
-} from '@solana/kit/program-client-core';
-import {
-  getDeployInstruction,
-  getFinalizeInstruction,
-  getRetractInstruction,
-  getTransferAuthorityInstruction,
-  getTruncateInstruction,
-  getWriteInstruction,
-  parseDeployInstruction,
-  parseFinalizeInstruction,
-  parseRetractInstruction,
-  parseTransferAuthorityInstruction,
-  parseTruncateInstruction,
-  parseWriteInstruction,
-  type DeployInput,
-  type FinalizeInput,
-  type ParsedDeployInstruction,
-  type ParsedFinalizeInstruction,
-  type ParsedRetractInstruction,
-  type ParsedTransferAuthorityInstruction,
-  type ParsedTruncateInstruction,
-  type ParsedWriteInstruction,
-  type RetractInput,
-  type TransferAuthorityInput,
-  type TruncateInput,
-  type WriteInput,
+    getDeployInstruction,
+    getFinalizeInstruction,
+    getRetractInstruction,
+    getTransferAuthorityInstruction,
+    getTruncateInstruction,
+    getWriteInstruction,
+    parseDeployInstruction,
+    parseFinalizeInstruction,
+    parseRetractInstruction,
+    parseTransferAuthorityInstruction,
+    parseTruncateInstruction,
+    parseWriteInstruction,
+    type DeployInput,
+    type FinalizeInput,
+    type ParsedDeployInstruction,
+    type ParsedFinalizeInstruction,
+    type ParsedRetractInstruction,
+    type ParsedTransferAuthorityInstruction,
+    type ParsedTruncateInstruction,
+    type ParsedWriteInstruction,
+    type RetractInput,
+    type TransferAuthorityInput,
+    type TruncateInput,
+    type WriteInput,
 } from '../instructions';
 
 export const LOADER_V4_PROGRAM_ADDRESS =
-  'CoreBPFLoaderV41111111111111111111111111111' as Address<'CoreBPFLoaderV41111111111111111111111111111'>;
+    'CoreBPFLoaderV41111111111111111111111111111' as Address<'CoreBPFLoaderV41111111111111111111111111111'>;
 
 export enum LoaderV4Instruction {
-  Write,
-  Truncate,
-  Deploy,
-  Retract,
-  TransferAuthority,
-  Finalize,
+    Write,
+    Truncate,
+    Deploy,
+    Retract,
+    TransferAuthority,
+    Finalize,
 }
 
 export function identifyLoaderV4Instruction(
-  instruction: { data: ReadonlyUint8Array } | ReadonlyUint8Array
+    instruction: { data: ReadonlyUint8Array } | ReadonlyUint8Array,
 ): LoaderV4Instruction {
-  const data = 'data' in instruction ? instruction.data : instruction;
-  if (containsBytes(data, getU8Encoder().encode(0), 0)) {
-    return LoaderV4Instruction.Write;
-  }
-  if (containsBytes(data, getU8Encoder().encode(1), 0)) {
-    return LoaderV4Instruction.Truncate;
-  }
-  if (containsBytes(data, getU8Encoder().encode(2), 0)) {
-    return LoaderV4Instruction.Deploy;
-  }
-  if (containsBytes(data, getU8Encoder().encode(3), 0)) {
-    return LoaderV4Instruction.Retract;
-  }
-  if (containsBytes(data, getU8Encoder().encode(4), 0)) {
-    return LoaderV4Instruction.TransferAuthority;
-  }
-  if (containsBytes(data, getU8Encoder().encode(5), 0)) {
-    return LoaderV4Instruction.Finalize;
-  }
-  throw new SolanaError(
-    SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_INSTRUCTION,
-    { instructionData: data, programName: 'loaderV4' }
-  );
+    const data = 'data' in instruction ? instruction.data : instruction;
+    if (containsBytes(data, getU8Encoder().encode(0), 0)) {
+        return LoaderV4Instruction.Write;
+    }
+    if (containsBytes(data, getU8Encoder().encode(1), 0)) {
+        return LoaderV4Instruction.Truncate;
+    }
+    if (containsBytes(data, getU8Encoder().encode(2), 0)) {
+        return LoaderV4Instruction.Deploy;
+    }
+    if (containsBytes(data, getU8Encoder().encode(3), 0)) {
+        return LoaderV4Instruction.Retract;
+    }
+    if (containsBytes(data, getU8Encoder().encode(4), 0)) {
+        return LoaderV4Instruction.TransferAuthority;
+    }
+    if (containsBytes(data, getU8Encoder().encode(5), 0)) {
+        return LoaderV4Instruction.Finalize;
+    }
+    throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_INSTRUCTION, {
+        instructionData: data,
+        programName: 'loaderV4',
+    });
 }
 
-export type ParsedLoaderV4Instruction<
-  TProgram extends string = 'CoreBPFLoaderV41111111111111111111111111111',
-> =
-  | ({
-      instructionType: LoaderV4Instruction.Write;
-    } & ParsedWriteInstruction<TProgram>)
-  | ({
-      instructionType: LoaderV4Instruction.Truncate;
-    } & ParsedTruncateInstruction<TProgram>)
-  | ({
-      instructionType: LoaderV4Instruction.Deploy;
-    } & ParsedDeployInstruction<TProgram>)
-  | ({
-      instructionType: LoaderV4Instruction.Retract;
-    } & ParsedRetractInstruction<TProgram>)
-  | ({
-      instructionType: LoaderV4Instruction.TransferAuthority;
-    } & ParsedTransferAuthorityInstruction<TProgram>)
-  | ({
-      instructionType: LoaderV4Instruction.Finalize;
-    } & ParsedFinalizeInstruction<TProgram>);
+export type ParsedLoaderV4Instruction<TProgram extends string = 'CoreBPFLoaderV41111111111111111111111111111'> =
+    | ({ instructionType: LoaderV4Instruction.Write } & ParsedWriteInstruction<TProgram>)
+    | ({ instructionType: LoaderV4Instruction.Truncate } & ParsedTruncateInstruction<TProgram>)
+    | ({ instructionType: LoaderV4Instruction.Deploy } & ParsedDeployInstruction<TProgram>)
+    | ({ instructionType: LoaderV4Instruction.Retract } & ParsedRetractInstruction<TProgram>)
+    | ({ instructionType: LoaderV4Instruction.TransferAuthority } & ParsedTransferAuthorityInstruction<TProgram>)
+    | ({ instructionType: LoaderV4Instruction.Finalize } & ParsedFinalizeInstruction<TProgram>);
 
 export function parseLoaderV4Instruction<TProgram extends string>(
-  instruction: Instruction<TProgram> & InstructionWithData<ReadonlyUint8Array>
+    instruction: Instruction<TProgram> & InstructionWithData<ReadonlyUint8Array>,
 ): ParsedLoaderV4Instruction<TProgram> {
-  const instructionType = identifyLoaderV4Instruction(instruction);
-  switch (instructionType) {
-    case LoaderV4Instruction.Write: {
-      assertIsInstructionWithAccounts(instruction);
-      return {
-        instructionType: LoaderV4Instruction.Write,
-        ...parseWriteInstruction(instruction),
-      };
+    const instructionType = identifyLoaderV4Instruction(instruction);
+    switch (instructionType) {
+        case LoaderV4Instruction.Write: {
+            assertIsInstructionWithAccounts(instruction);
+            return { instructionType: LoaderV4Instruction.Write, ...parseWriteInstruction(instruction) };
+        }
+        case LoaderV4Instruction.Truncate: {
+            assertIsInstructionWithAccounts(instruction);
+            return { instructionType: LoaderV4Instruction.Truncate, ...parseTruncateInstruction(instruction) };
+        }
+        case LoaderV4Instruction.Deploy: {
+            assertIsInstructionWithAccounts(instruction);
+            return { instructionType: LoaderV4Instruction.Deploy, ...parseDeployInstruction(instruction) };
+        }
+        case LoaderV4Instruction.Retract: {
+            assertIsInstructionWithAccounts(instruction);
+            return { instructionType: LoaderV4Instruction.Retract, ...parseRetractInstruction(instruction) };
+        }
+        case LoaderV4Instruction.TransferAuthority: {
+            assertIsInstructionWithAccounts(instruction);
+            return {
+                instructionType: LoaderV4Instruction.TransferAuthority,
+                ...parseTransferAuthorityInstruction(instruction),
+            };
+        }
+        case LoaderV4Instruction.Finalize: {
+            assertIsInstructionWithAccounts(instruction);
+            return { instructionType: LoaderV4Instruction.Finalize, ...parseFinalizeInstruction(instruction) };
+        }
+        default:
+            throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__UNRECOGNIZED_INSTRUCTION_TYPE, {
+                instructionType: instructionType as string,
+                programName: 'loaderV4',
+            });
     }
-    case LoaderV4Instruction.Truncate: {
-      assertIsInstructionWithAccounts(instruction);
-      return {
-        instructionType: LoaderV4Instruction.Truncate,
-        ...parseTruncateInstruction(instruction),
-      };
-    }
-    case LoaderV4Instruction.Deploy: {
-      assertIsInstructionWithAccounts(instruction);
-      return {
-        instructionType: LoaderV4Instruction.Deploy,
-        ...parseDeployInstruction(instruction),
-      };
-    }
-    case LoaderV4Instruction.Retract: {
-      assertIsInstructionWithAccounts(instruction);
-      return {
-        instructionType: LoaderV4Instruction.Retract,
-        ...parseRetractInstruction(instruction),
-      };
-    }
-    case LoaderV4Instruction.TransferAuthority: {
-      assertIsInstructionWithAccounts(instruction);
-      return {
-        instructionType: LoaderV4Instruction.TransferAuthority,
-        ...parseTransferAuthorityInstruction(instruction),
-      };
-    }
-    case LoaderV4Instruction.Finalize: {
-      assertIsInstructionWithAccounts(instruction);
-      return {
-        instructionType: LoaderV4Instruction.Finalize,
-        ...parseFinalizeInstruction(instruction),
-      };
-    }
-    default:
-      throw new SolanaError(
-        SOLANA_ERROR__PROGRAM_CLIENTS__UNRECOGNIZED_INSTRUCTION_TYPE,
-        { instructionType: instructionType as string, programName: 'loaderV4' }
-      );
-  }
 }
 
 export type LoaderV4Plugin = { instructions: LoaderV4PluginInstructions };
 
 export type LoaderV4PluginInstructions = {
-  write: (
-    input: WriteInput
-  ) => ReturnType<typeof getWriteInstruction> & SelfPlanAndSendFunctions;
-  truncate: (
-    input: TruncateInput
-  ) => ReturnType<typeof getTruncateInstruction> & SelfPlanAndSendFunctions;
-  deploy: (
-    input: DeployInput
-  ) => ReturnType<typeof getDeployInstruction> & SelfPlanAndSendFunctions;
-  retract: (
-    input: RetractInput
-  ) => ReturnType<typeof getRetractInstruction> & SelfPlanAndSendFunctions;
-  transferAuthority: (
-    input: TransferAuthorityInput
-  ) => ReturnType<typeof getTransferAuthorityInstruction> &
-    SelfPlanAndSendFunctions;
-  finalize: (
-    input: FinalizeInput
-  ) => ReturnType<typeof getFinalizeInstruction> & SelfPlanAndSendFunctions;
+    write: (input: WriteInput) => ReturnType<typeof getWriteInstruction> & SelfPlanAndSendFunctions;
+    truncate: (input: TruncateInput) => ReturnType<typeof getTruncateInstruction> & SelfPlanAndSendFunctions;
+    deploy: (input: DeployInput) => ReturnType<typeof getDeployInstruction> & SelfPlanAndSendFunctions;
+    retract: (input: RetractInput) => ReturnType<typeof getRetractInstruction> & SelfPlanAndSendFunctions;
+    transferAuthority: (
+        input: TransferAuthorityInput,
+    ) => ReturnType<typeof getTransferAuthorityInstruction> & SelfPlanAndSendFunctions;
+    finalize: (input: FinalizeInput) => ReturnType<typeof getFinalizeInstruction> & SelfPlanAndSendFunctions;
 };
 
-export type LoaderV4PluginRequirements = ClientWithTransactionPlanning &
-  ClientWithTransactionSending;
+export type LoaderV4PluginRequirements = ClientWithTransactionPlanning & ClientWithTransactionSending;
 
 export function loaderV4Program() {
-  return <T extends LoaderV4PluginRequirements>(
-    client: T
-  ): Omit<T, 'loaderV4'> & { loaderV4: LoaderV4Plugin } => {
-    return extendClient(client, {
-      loaderV4: <LoaderV4Plugin>{
-        instructions: {
-          write: (input) =>
-            addSelfPlanAndSendFunctions(client, getWriteInstruction(input)),
-          truncate: (input) =>
-            addSelfPlanAndSendFunctions(client, getTruncateInstruction(input)),
-          deploy: (input) =>
-            addSelfPlanAndSendFunctions(client, getDeployInstruction(input)),
-          retract: (input) =>
-            addSelfPlanAndSendFunctions(client, getRetractInstruction(input)),
-          transferAuthority: (input) =>
-            addSelfPlanAndSendFunctions(
-              client,
-              getTransferAuthorityInstruction(input)
-            ),
-          finalize: (input) =>
-            addSelfPlanAndSendFunctions(client, getFinalizeInstruction(input)),
-        },
-      },
-    });
-  };
+    return <T extends LoaderV4PluginRequirements>(client: T): Omit<T, 'loaderV4'> & { loaderV4: LoaderV4Plugin } => {
+        return extendClient(client, {
+            loaderV4: <LoaderV4Plugin>{
+                instructions: {
+                    write: input => addSelfPlanAndSendFunctions(client, getWriteInstruction(input)),
+                    truncate: input => addSelfPlanAndSendFunctions(client, getTruncateInstruction(input)),
+                    deploy: input => addSelfPlanAndSendFunctions(client, getDeployInstruction(input)),
+                    retract: input => addSelfPlanAndSendFunctions(client, getRetractInstruction(input)),
+                    transferAuthority: input =>
+                        addSelfPlanAndSendFunctions(client, getTransferAuthorityInstruction(input)),
+                    finalize: input => addSelfPlanAndSendFunctions(client, getFinalizeInstruction(input)),
+                },
+            },
+        });
+    };
 }

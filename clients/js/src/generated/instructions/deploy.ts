@@ -7,199 +7,160 @@
  */
 
 import {
-  combineCodec,
-  getStructDecoder,
-  getStructEncoder,
-  getU8Decoder,
-  getU8Encoder,
-  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-  SolanaError,
-  transformEncoder,
-  type AccountMeta,
-  type AccountSignerMeta,
-  type Address,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
-  type Instruction,
-  type InstructionWithAccounts,
-  type InstructionWithData,
-  type ReadonlySignerAccount,
-  type ReadonlyUint8Array,
-  type TransactionSigner,
-  type WritableAccount,
+    combineCodec,
+    getStructDecoder,
+    getStructEncoder,
+    getU8Decoder,
+    getU8Encoder,
+    SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+    SolanaError,
+    transformEncoder,
+    type AccountMeta,
+    type AccountSignerMeta,
+    type Address,
+    type FixedSizeCodec,
+    type FixedSizeDecoder,
+    type FixedSizeEncoder,
+    type Instruction,
+    type InstructionWithAccounts,
+    type InstructionWithData,
+    type ReadonlySignerAccount,
+    type ReadonlyUint8Array,
+    type TransactionSigner,
+    type WritableAccount,
 } from '@solana/kit';
-import {
-  getAccountMetaFactory,
-  type ResolvedInstructionAccount,
-} from '@solana/kit/program-client-core';
+import { getAccountMetaFactory, type ResolvedInstructionAccount } from '@solana/kit/program-client-core';
 import { LOADER_V4_PROGRAM_ADDRESS } from '../programs';
 
 export const DEPLOY_DISCRIMINATOR = 2;
 
 export function getDeployDiscriminatorBytes(): ReadonlyUint8Array {
-  return getU8Encoder().encode(DEPLOY_DISCRIMINATOR);
+    return getU8Encoder().encode(DEPLOY_DISCRIMINATOR);
 }
 
 export type DeployInstruction<
-  TProgram extends string = typeof LOADER_V4_PROGRAM_ADDRESS,
-  TAccountProgram extends string | AccountMeta<string> = string,
-  TAccountAuthority extends string | AccountMeta<string> = string,
-  TAccountSource extends string | AccountMeta<string> = string,
-  TRemainingAccounts extends readonly AccountMeta<string>[] = [],
+    TProgram extends string = typeof LOADER_V4_PROGRAM_ADDRESS,
+    TAccountProgram extends string | AccountMeta<string> = string,
+    TAccountAuthority extends string | AccountMeta<string> = string,
+    TAccountSource extends string | AccountMeta<string> = string,
+    TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
-  InstructionWithData<ReadonlyUint8Array> &
-  InstructionWithAccounts<
-    [
-      TAccountProgram extends string
-        ? WritableAccount<TAccountProgram>
-        : TAccountProgram,
-      TAccountAuthority extends string
-        ? ReadonlySignerAccount<TAccountAuthority> &
-            AccountSignerMeta<TAccountAuthority>
-        : TAccountAuthority,
-      TAccountSource extends string
-        ? WritableAccount<TAccountSource>
-        : TAccountSource,
-      ...TRemainingAccounts,
-    ]
-  >;
+    InstructionWithData<ReadonlyUint8Array> &
+    InstructionWithAccounts<
+        [
+            TAccountProgram extends string ? WritableAccount<TAccountProgram> : TAccountProgram,
+            TAccountAuthority extends string
+                ? ReadonlySignerAccount<TAccountAuthority> & AccountSignerMeta<TAccountAuthority>
+                : TAccountAuthority,
+            TAccountSource extends string ? WritableAccount<TAccountSource> : TAccountSource,
+            ...TRemainingAccounts,
+        ]
+    >;
 
 export type DeployInstructionData = { discriminator: number };
 
 export type DeployInstructionDataArgs = {};
 
 export function getDeployInstructionDataEncoder(): FixedSizeEncoder<DeployInstructionDataArgs> {
-  return transformEncoder(
-    getStructEncoder([['discriminator', getU8Encoder()]]),
-    (value) => ({ ...value, discriminator: DEPLOY_DISCRIMINATOR })
-  );
+    return transformEncoder(getStructEncoder([['discriminator', getU8Encoder()]]), value => ({
+        ...value,
+        discriminator: DEPLOY_DISCRIMINATOR,
+    }));
 }
 
 export function getDeployInstructionDataDecoder(): FixedSizeDecoder<DeployInstructionData> {
-  return getStructDecoder([['discriminator', getU8Decoder()]]);
+    return getStructDecoder([['discriminator', getU8Decoder()]]);
 }
 
-export function getDeployInstructionDataCodec(): FixedSizeCodec<
-  DeployInstructionDataArgs,
-  DeployInstructionData
-> {
-  return combineCodec(
-    getDeployInstructionDataEncoder(),
-    getDeployInstructionDataDecoder()
-  );
+export function getDeployInstructionDataCodec(): FixedSizeCodec<DeployInstructionDataArgs, DeployInstructionData> {
+    return combineCodec(getDeployInstructionDataEncoder(), getDeployInstructionDataDecoder());
 }
 
 export type DeployInput<
-  TAccountProgram extends string = string,
-  TAccountAuthority extends string = string,
-  TAccountSource extends string = string,
+    TAccountProgram extends string = string,
+    TAccountAuthority extends string = string,
+    TAccountSource extends string = string,
 > = {
-  /** Program account to deploy. */
-  program: Address<TAccountProgram>;
-  /** Program authority. */
-  authority: TransactionSigner<TAccountAuthority>;
-  /** Undeployed source program account to take data and lamports from (optional). */
-  source?: Address<TAccountSource>;
+    /** Program account to deploy. */
+    program: Address<TAccountProgram>;
+    /** Program authority. */
+    authority: TransactionSigner<TAccountAuthority>;
+    /** Undeployed source program account to take data and lamports from (optional). */
+    source?: Address<TAccountSource>;
 };
 
 export function getDeployInstruction<
-  TAccountProgram extends string,
-  TAccountAuthority extends string,
-  TAccountSource extends string,
-  TProgramAddress extends Address = typeof LOADER_V4_PROGRAM_ADDRESS,
+    TAccountProgram extends string,
+    TAccountAuthority extends string,
+    TAccountSource extends string,
+    TProgramAddress extends Address = typeof LOADER_V4_PROGRAM_ADDRESS,
 >(
-  input: DeployInput<TAccountProgram, TAccountAuthority, TAccountSource>,
-  config?: { programAddress?: TProgramAddress }
-): DeployInstruction<
-  TProgramAddress,
-  TAccountProgram,
-  TAccountAuthority,
-  TAccountSource
-> {
-  // Program address.
-  const programAddress = config?.programAddress ?? LOADER_V4_PROGRAM_ADDRESS;
+    input: DeployInput<TAccountProgram, TAccountAuthority, TAccountSource>,
+    config?: { programAddress?: TProgramAddress },
+): DeployInstruction<TProgramAddress, TAccountProgram, TAccountAuthority, TAccountSource> {
+    // Program address.
+    const programAddress = config?.programAddress ?? LOADER_V4_PROGRAM_ADDRESS;
 
-  // Original accounts.
-  const originalAccounts = {
-    program: { value: input.program ?? null, isWritable: true },
-    authority: { value: input.authority ?? null, isWritable: false },
-    source: { value: input.source ?? null, isWritable: true },
-  };
-  const accounts = originalAccounts as Record<
-    keyof typeof originalAccounts,
-    ResolvedInstructionAccount
-  >;
+    // Original accounts.
+    const originalAccounts = {
+        program: { value: input.program ?? null, isWritable: true },
+        authority: { value: input.authority ?? null, isWritable: false },
+        source: { value: input.source ?? null, isWritable: true },
+    };
+    const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
 
-  const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-  return Object.freeze({
-    accounts: [
-      getAccountMeta('program', accounts.program),
-      getAccountMeta('authority', accounts.authority),
-      getAccountMeta('source', accounts.source),
-    ],
-    data: getDeployInstructionDataEncoder().encode({}),
-    programAddress,
-  } as DeployInstruction<
-    TProgramAddress,
-    TAccountProgram,
-    TAccountAuthority,
-    TAccountSource
-  >);
+    const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
+    return Object.freeze({
+        accounts: [
+            getAccountMeta('program', accounts.program),
+            getAccountMeta('authority', accounts.authority),
+            getAccountMeta('source', accounts.source),
+        ],
+        data: getDeployInstructionDataEncoder().encode({}),
+        programAddress,
+    } as DeployInstruction<TProgramAddress, TAccountProgram, TAccountAuthority, TAccountSource>);
 }
 
 export type ParsedDeployInstruction<
-  TProgram extends string = typeof LOADER_V4_PROGRAM_ADDRESS,
-  TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
+    TProgram extends string = typeof LOADER_V4_PROGRAM_ADDRESS,
+    TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
 > = {
-  programAddress: Address<TProgram>;
-  accounts: {
-    /** Program account to deploy. */
-    program: TAccountMetas[0];
-    /** Program authority. */
-    authority: TAccountMetas[1];
-    /** Undeployed source program account to take data and lamports from (optional). */
-    source?: TAccountMetas[2] | undefined;
-  };
-  data: DeployInstructionData;
+    programAddress: Address<TProgram>;
+    accounts: {
+        /** Program account to deploy. */
+        program: TAccountMetas[0];
+        /** Program authority. */
+        authority: TAccountMetas[1];
+        /** Undeployed source program account to take data and lamports from (optional). */
+        source?: TAccountMetas[2] | undefined;
+    };
+    data: DeployInstructionData;
 };
 
-export function parseDeployInstruction<
-  TProgram extends string,
-  TAccountMetas extends readonly AccountMeta[],
->(
-  instruction: Instruction<TProgram> &
-    InstructionWithAccounts<TAccountMetas> &
-    InstructionWithData<ReadonlyUint8Array>
+export function parseDeployInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(
+    instruction: Instruction<TProgram> &
+        InstructionWithAccounts<TAccountMetas> &
+        InstructionWithData<ReadonlyUint8Array>,
 ): ParsedDeployInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 3) {
-    throw new SolanaError(
-      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-      {
-        actualAccountMetas: instruction.accounts.length,
-        expectedAccountMetas: 3,
-      }
-    );
-  }
-  let accountIndex = 0;
-  const getNextAccount = () => {
-    const accountMeta = (instruction.accounts as TAccountMetas)[accountIndex]!;
-    accountIndex += 1;
-    return accountMeta;
-  };
-  const getNextOptionalAccount = () => {
-    const accountMeta = getNextAccount();
-    return accountMeta.address === LOADER_V4_PROGRAM_ADDRESS
-      ? undefined
-      : accountMeta;
-  };
-  return {
-    programAddress: instruction.programAddress,
-    accounts: {
-      program: getNextAccount(),
-      authority: getNextAccount(),
-      source: getNextOptionalAccount(),
-    },
-    data: getDeployInstructionDataDecoder().decode(instruction.data),
-  };
+    if (instruction.accounts.length < 3) {
+        throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
+            actualAccountMetas: instruction.accounts.length,
+            expectedAccountMetas: 3,
+        });
+    }
+    let accountIndex = 0;
+    const getNextAccount = () => {
+        const accountMeta = (instruction.accounts as TAccountMetas)[accountIndex]!;
+        accountIndex += 1;
+        return accountMeta;
+    };
+    const getNextOptionalAccount = () => {
+        const accountMeta = getNextAccount();
+        return accountMeta.address === LOADER_V4_PROGRAM_ADDRESS ? undefined : accountMeta;
+    };
+    return {
+        programAddress: instruction.programAddress,
+        accounts: { program: getNextAccount(), authority: getNextAccount(), source: getNextOptionalAccount() },
+        data: getDeployInstructionDataDecoder().decode(instruction.data),
+    };
 }

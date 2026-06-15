@@ -1,14 +1,16 @@
 import { execSync } from "node:child_process";
-import fs from "node:fs";
-import path from "node:path";
 
 const nightly = execSync("make --no-print-directory rust-toolchain-nightly")
   .toString()
   .trim();
 
-const prettierOptions = JSON.parse(
-  fs.readFileSync(path.join("clients", "js", ".prettierrc.json"), "utf-8")
-);
+const prettierOptions = {
+  arrowParens: "avoid",
+  printWidth: 120,
+  singleQuote: true,
+  tabWidth: 4,
+  trailingComma: "all",
+};
 
 export default {
   idl: "idl.json",

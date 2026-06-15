@@ -7,218 +7,178 @@
  */
 
 import {
-  combineCodec,
-  getStructDecoder,
-  getStructEncoder,
-  getU32Decoder,
-  getU32Encoder,
-  getU8Decoder,
-  getU8Encoder,
-  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-  SolanaError,
-  transformEncoder,
-  type AccountMeta,
-  type AccountSignerMeta,
-  type Address,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
-  type Instruction,
-  type InstructionWithAccounts,
-  type InstructionWithData,
-  type ReadonlySignerAccount,
-  type ReadonlyUint8Array,
-  type TransactionSigner,
-  type WritableAccount,
-  type WritableSignerAccount,
+    combineCodec,
+    getStructDecoder,
+    getStructEncoder,
+    getU32Decoder,
+    getU32Encoder,
+    getU8Decoder,
+    getU8Encoder,
+    SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+    SolanaError,
+    transformEncoder,
+    type AccountMeta,
+    type AccountSignerMeta,
+    type Address,
+    type FixedSizeCodec,
+    type FixedSizeDecoder,
+    type FixedSizeEncoder,
+    type Instruction,
+    type InstructionWithAccounts,
+    type InstructionWithData,
+    type ReadonlySignerAccount,
+    type ReadonlyUint8Array,
+    type TransactionSigner,
+    type WritableAccount,
+    type WritableSignerAccount,
 } from '@solana/kit';
-import {
-  getAccountMetaFactory,
-  type ResolvedInstructionAccount,
-} from '@solana/kit/program-client-core';
+import { getAccountMetaFactory, type ResolvedInstructionAccount } from '@solana/kit/program-client-core';
 import { LOADER_V4_PROGRAM_ADDRESS } from '../programs';
 
 export const TRUNCATE_DISCRIMINATOR = 1;
 
 export function getTruncateDiscriminatorBytes(): ReadonlyUint8Array {
-  return getU8Encoder().encode(TRUNCATE_DISCRIMINATOR);
+    return getU8Encoder().encode(TRUNCATE_DISCRIMINATOR);
 }
 
 export type TruncateInstruction<
-  TProgram extends string = typeof LOADER_V4_PROGRAM_ADDRESS,
-  TAccountProgram extends string | AccountMeta<string> = string,
-  TAccountAuthority extends string | AccountMeta<string> = string,
-  TAccountDestination extends string | AccountMeta<string> = string,
-  TRemainingAccounts extends readonly AccountMeta<string>[] = [],
+    TProgram extends string = typeof LOADER_V4_PROGRAM_ADDRESS,
+    TAccountProgram extends string | AccountMeta<string> = string,
+    TAccountAuthority extends string | AccountMeta<string> = string,
+    TAccountDestination extends string | AccountMeta<string> = string,
+    TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
-  InstructionWithData<ReadonlyUint8Array> &
-  InstructionWithAccounts<
-    [
-      TAccountProgram extends string
-        ? WritableSignerAccount<TAccountProgram> &
-            AccountSignerMeta<TAccountProgram>
-        : TAccountProgram,
-      TAccountAuthority extends string
-        ? ReadonlySignerAccount<TAccountAuthority> &
-            AccountSignerMeta<TAccountAuthority>
-        : TAccountAuthority,
-      TAccountDestination extends string
-        ? WritableAccount<TAccountDestination>
-        : TAccountDestination,
-      ...TRemainingAccounts,
-    ]
-  >;
+    InstructionWithData<ReadonlyUint8Array> &
+    InstructionWithAccounts<
+        [
+            TAccountProgram extends string
+                ? WritableSignerAccount<TAccountProgram> & AccountSignerMeta<TAccountProgram>
+                : TAccountProgram,
+            TAccountAuthority extends string
+                ? ReadonlySignerAccount<TAccountAuthority> & AccountSignerMeta<TAccountAuthority>
+                : TAccountAuthority,
+            TAccountDestination extends string ? WritableAccount<TAccountDestination> : TAccountDestination,
+            ...TRemainingAccounts,
+        ]
+    >;
 
-export type TruncateInstructionData = {
-  discriminator: number;
-  newSize: number;
-};
+export type TruncateInstructionData = { discriminator: number; newSize: number };
 
 export type TruncateInstructionDataArgs = { newSize: number };
 
 export function getTruncateInstructionDataEncoder(): FixedSizeEncoder<TruncateInstructionDataArgs> {
-  return transformEncoder(
-    getStructEncoder([
-      ['discriminator', getU8Encoder()],
-      ['newSize', getU32Encoder()],
-    ]),
-    (value) => ({ ...value, discriminator: TRUNCATE_DISCRIMINATOR })
-  );
+    return transformEncoder(
+        getStructEncoder([
+            ['discriminator', getU8Encoder()],
+            ['newSize', getU32Encoder()],
+        ]),
+        value => ({ ...value, discriminator: TRUNCATE_DISCRIMINATOR }),
+    );
 }
 
 export function getTruncateInstructionDataDecoder(): FixedSizeDecoder<TruncateInstructionData> {
-  return getStructDecoder([
-    ['discriminator', getU8Decoder()],
-    ['newSize', getU32Decoder()],
-  ]);
+    return getStructDecoder([
+        ['discriminator', getU8Decoder()],
+        ['newSize', getU32Decoder()],
+    ]);
 }
 
 export function getTruncateInstructionDataCodec(): FixedSizeCodec<
-  TruncateInstructionDataArgs,
-  TruncateInstructionData
+    TruncateInstructionDataArgs,
+    TruncateInstructionData
 > {
-  return combineCodec(
-    getTruncateInstructionDataEncoder(),
-    getTruncateInstructionDataDecoder()
-  );
+    return combineCodec(getTruncateInstructionDataEncoder(), getTruncateInstructionDataDecoder());
 }
 
 export type TruncateInput<
-  TAccountProgram extends string = string,
-  TAccountAuthority extends string = string,
-  TAccountDestination extends string = string,
+    TAccountProgram extends string = string,
+    TAccountAuthority extends string = string,
+    TAccountDestination extends string = string,
 > = {
-  /** Program account to change the size of. */
-  program: TransactionSigner<TAccountProgram>;
-  /** Program authority. */
-  authority: TransactionSigner<TAccountAuthority>;
-  /** Destination account for reclaimed lamports (optional). */
-  destination?: Address<TAccountDestination>;
-  newSize: TruncateInstructionDataArgs['newSize'];
+    /** Program account to change the size of. */
+    program: TransactionSigner<TAccountProgram>;
+    /** Program authority. */
+    authority: TransactionSigner<TAccountAuthority>;
+    /** Destination account for reclaimed lamports (optional). */
+    destination?: Address<TAccountDestination>;
+    newSize: TruncateInstructionDataArgs['newSize'];
 };
 
 export function getTruncateInstruction<
-  TAccountProgram extends string,
-  TAccountAuthority extends string,
-  TAccountDestination extends string,
-  TProgramAddress extends Address = typeof LOADER_V4_PROGRAM_ADDRESS,
+    TAccountProgram extends string,
+    TAccountAuthority extends string,
+    TAccountDestination extends string,
+    TProgramAddress extends Address = typeof LOADER_V4_PROGRAM_ADDRESS,
 >(
-  input: TruncateInput<TAccountProgram, TAccountAuthority, TAccountDestination>,
-  config?: { programAddress?: TProgramAddress }
-): TruncateInstruction<
-  TProgramAddress,
-  TAccountProgram,
-  TAccountAuthority,
-  TAccountDestination
-> {
-  // Program address.
-  const programAddress = config?.programAddress ?? LOADER_V4_PROGRAM_ADDRESS;
+    input: TruncateInput<TAccountProgram, TAccountAuthority, TAccountDestination>,
+    config?: { programAddress?: TProgramAddress },
+): TruncateInstruction<TProgramAddress, TAccountProgram, TAccountAuthority, TAccountDestination> {
+    // Program address.
+    const programAddress = config?.programAddress ?? LOADER_V4_PROGRAM_ADDRESS;
 
-  // Original accounts.
-  const originalAccounts = {
-    program: { value: input.program ?? null, isWritable: true },
-    authority: { value: input.authority ?? null, isWritable: false },
-    destination: { value: input.destination ?? null, isWritable: true },
-  };
-  const accounts = originalAccounts as Record<
-    keyof typeof originalAccounts,
-    ResolvedInstructionAccount
-  >;
+    // Original accounts.
+    const originalAccounts = {
+        program: { value: input.program ?? null, isWritable: true },
+        authority: { value: input.authority ?? null, isWritable: false },
+        destination: { value: input.destination ?? null, isWritable: true },
+    };
+    const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
 
-  // Original args.
-  const args = { ...input };
+    // Original args.
+    const args = { ...input };
 
-  const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-  return Object.freeze({
-    accounts: [
-      getAccountMeta('program', accounts.program),
-      getAccountMeta('authority', accounts.authority),
-      getAccountMeta('destination', accounts.destination),
-    ],
-    data: getTruncateInstructionDataEncoder().encode(
-      args as TruncateInstructionDataArgs
-    ),
-    programAddress,
-  } as TruncateInstruction<
-    TProgramAddress,
-    TAccountProgram,
-    TAccountAuthority,
-    TAccountDestination
-  >);
+    const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
+    return Object.freeze({
+        accounts: [
+            getAccountMeta('program', accounts.program),
+            getAccountMeta('authority', accounts.authority),
+            getAccountMeta('destination', accounts.destination),
+        ],
+        data: getTruncateInstructionDataEncoder().encode(args as TruncateInstructionDataArgs),
+        programAddress,
+    } as TruncateInstruction<TProgramAddress, TAccountProgram, TAccountAuthority, TAccountDestination>);
 }
 
 export type ParsedTruncateInstruction<
-  TProgram extends string = typeof LOADER_V4_PROGRAM_ADDRESS,
-  TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
+    TProgram extends string = typeof LOADER_V4_PROGRAM_ADDRESS,
+    TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
 > = {
-  programAddress: Address<TProgram>;
-  accounts: {
-    /** Program account to change the size of. */
-    program: TAccountMetas[0];
-    /** Program authority. */
-    authority: TAccountMetas[1];
-    /** Destination account for reclaimed lamports (optional). */
-    destination?: TAccountMetas[2] | undefined;
-  };
-  data: TruncateInstructionData;
+    programAddress: Address<TProgram>;
+    accounts: {
+        /** Program account to change the size of. */
+        program: TAccountMetas[0];
+        /** Program authority. */
+        authority: TAccountMetas[1];
+        /** Destination account for reclaimed lamports (optional). */
+        destination?: TAccountMetas[2] | undefined;
+    };
+    data: TruncateInstructionData;
 };
 
-export function parseTruncateInstruction<
-  TProgram extends string,
-  TAccountMetas extends readonly AccountMeta[],
->(
-  instruction: Instruction<TProgram> &
-    InstructionWithAccounts<TAccountMetas> &
-    InstructionWithData<ReadonlyUint8Array>
+export function parseTruncateInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(
+    instruction: Instruction<TProgram> &
+        InstructionWithAccounts<TAccountMetas> &
+        InstructionWithData<ReadonlyUint8Array>,
 ): ParsedTruncateInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 3) {
-    throw new SolanaError(
-      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-      {
-        actualAccountMetas: instruction.accounts.length,
-        expectedAccountMetas: 3,
-      }
-    );
-  }
-  let accountIndex = 0;
-  const getNextAccount = () => {
-    const accountMeta = (instruction.accounts as TAccountMetas)[accountIndex]!;
-    accountIndex += 1;
-    return accountMeta;
-  };
-  const getNextOptionalAccount = () => {
-    const accountMeta = getNextAccount();
-    return accountMeta.address === LOADER_V4_PROGRAM_ADDRESS
-      ? undefined
-      : accountMeta;
-  };
-  return {
-    programAddress: instruction.programAddress,
-    accounts: {
-      program: getNextAccount(),
-      authority: getNextAccount(),
-      destination: getNextOptionalAccount(),
-    },
-    data: getTruncateInstructionDataDecoder().decode(instruction.data),
-  };
+    if (instruction.accounts.length < 3) {
+        throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
+            actualAccountMetas: instruction.accounts.length,
+            expectedAccountMetas: 3,
+        });
+    }
+    let accountIndex = 0;
+    const getNextAccount = () => {
+        const accountMeta = (instruction.accounts as TAccountMetas)[accountIndex]!;
+        accountIndex += 1;
+        return accountMeta;
+    };
+    const getNextOptionalAccount = () => {
+        const accountMeta = getNextAccount();
+        return accountMeta.address === LOADER_V4_PROGRAM_ADDRESS ? undefined : accountMeta;
+    };
+    return {
+        programAddress: instruction.programAddress,
+        accounts: { program: getNextAccount(), authority: getNextAccount(), destination: getNextOptionalAccount() },
+        data: getTruncateInstructionDataDecoder().decode(instruction.data),
+    };
 }
