@@ -7,201 +7,169 @@
  */
 
 import {
-  combineCodec,
-  getStructDecoder,
-  getStructEncoder,
-  getU8Decoder,
-  getU8Encoder,
-  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-  SolanaError,
-  transformEncoder,
-  type AccountMeta,
-  type AccountSignerMeta,
-  type Address,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
-  type Instruction,
-  type InstructionWithAccounts,
-  type InstructionWithData,
-  type ReadonlySignerAccount,
-  type ReadonlyUint8Array,
-  type TransactionSigner,
-  type WritableAccount,
+    combineCodec,
+    getStructDecoder,
+    getStructEncoder,
+    getU8Decoder,
+    getU8Encoder,
+    SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+    SolanaError,
+    transformEncoder,
+    type AccountMeta,
+    type AccountSignerMeta,
+    type Address,
+    type FixedSizeCodec,
+    type FixedSizeDecoder,
+    type FixedSizeEncoder,
+    type Instruction,
+    type InstructionWithAccounts,
+    type InstructionWithData,
+    type ReadonlySignerAccount,
+    type ReadonlyUint8Array,
+    type TransactionSigner,
+    type WritableAccount,
 } from '@solana/kit';
-import {
-  getAccountMetaFactory,
-  type ResolvedInstructionAccount,
-} from '@solana/kit/program-client-core';
+import { getAccountMetaFactory, type ResolvedInstructionAccount } from '@solana/kit/program-client-core';
 import { LOADER_V4_PROGRAM_ADDRESS } from '../programs';
 
 export const TRANSFER_AUTHORITY_DISCRIMINATOR = 4;
 
 export function getTransferAuthorityDiscriminatorBytes(): ReadonlyUint8Array {
-  return getU8Encoder().encode(TRANSFER_AUTHORITY_DISCRIMINATOR);
+    return getU8Encoder().encode(TRANSFER_AUTHORITY_DISCRIMINATOR);
 }
 
 export type TransferAuthorityInstruction<
-  TProgram extends string = typeof LOADER_V4_PROGRAM_ADDRESS,
-  TAccountProgram extends string | AccountMeta<string> = string,
-  TAccountCurrentAuthority extends string | AccountMeta<string> = string,
-  TAccountNewAuthority extends string | AccountMeta<string> = string,
-  TRemainingAccounts extends readonly AccountMeta<string>[] = [],
+    TProgram extends string = typeof LOADER_V4_PROGRAM_ADDRESS,
+    TAccountProgram extends string | AccountMeta<string> = string,
+    TAccountCurrentAuthority extends string | AccountMeta<string> = string,
+    TAccountNewAuthority extends string | AccountMeta<string> = string,
+    TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
-  InstructionWithData<ReadonlyUint8Array> &
-  InstructionWithAccounts<
-    [
-      TAccountProgram extends string
-        ? WritableAccount<TAccountProgram>
-        : TAccountProgram,
-      TAccountCurrentAuthority extends string
-        ? ReadonlySignerAccount<TAccountCurrentAuthority> &
-            AccountSignerMeta<TAccountCurrentAuthority>
-        : TAccountCurrentAuthority,
-      TAccountNewAuthority extends string
-        ? ReadonlySignerAccount<TAccountNewAuthority> &
-            AccountSignerMeta<TAccountNewAuthority>
-        : TAccountNewAuthority,
-      ...TRemainingAccounts,
-    ]
-  >;
+    InstructionWithData<ReadonlyUint8Array> &
+    InstructionWithAccounts<
+        [
+            TAccountProgram extends string ? WritableAccount<TAccountProgram> : TAccountProgram,
+            TAccountCurrentAuthority extends string
+                ? ReadonlySignerAccount<TAccountCurrentAuthority> & AccountSignerMeta<TAccountCurrentAuthority>
+                : TAccountCurrentAuthority,
+            TAccountNewAuthority extends string
+                ? ReadonlySignerAccount<TAccountNewAuthority> & AccountSignerMeta<TAccountNewAuthority>
+                : TAccountNewAuthority,
+            ...TRemainingAccounts,
+        ]
+    >;
 
 export type TransferAuthorityInstructionData = { discriminator: number };
 
 export type TransferAuthorityInstructionDataArgs = {};
 
 export function getTransferAuthorityInstructionDataEncoder(): FixedSizeEncoder<TransferAuthorityInstructionDataArgs> {
-  return transformEncoder(
-    getStructEncoder([['discriminator', getU8Encoder()]]),
-    (value) => ({ ...value, discriminator: TRANSFER_AUTHORITY_DISCRIMINATOR })
-  );
+    return transformEncoder(getStructEncoder([['discriminator', getU8Encoder()]]), value => ({
+        ...value,
+        discriminator: TRANSFER_AUTHORITY_DISCRIMINATOR,
+    }));
 }
 
 export function getTransferAuthorityInstructionDataDecoder(): FixedSizeDecoder<TransferAuthorityInstructionData> {
-  return getStructDecoder([['discriminator', getU8Decoder()]]);
+    return getStructDecoder([['discriminator', getU8Decoder()]]);
 }
 
 export function getTransferAuthorityInstructionDataCodec(): FixedSizeCodec<
-  TransferAuthorityInstructionDataArgs,
-  TransferAuthorityInstructionData
+    TransferAuthorityInstructionDataArgs,
+    TransferAuthorityInstructionData
 > {
-  return combineCodec(
-    getTransferAuthorityInstructionDataEncoder(),
-    getTransferAuthorityInstructionDataDecoder()
-  );
+    return combineCodec(getTransferAuthorityInstructionDataEncoder(), getTransferAuthorityInstructionDataDecoder());
 }
 
 export type TransferAuthorityInput<
-  TAccountProgram extends string = string,
-  TAccountCurrentAuthority extends string = string,
-  TAccountNewAuthority extends string = string,
+    TAccountProgram extends string = string,
+    TAccountCurrentAuthority extends string = string,
+    TAccountNewAuthority extends string = string,
 > = {
-  /** Program account to change the authority of. */
-  program: Address<TAccountProgram>;
-  /** Current program authority. */
-  currentAuthority: TransactionSigner<TAccountCurrentAuthority>;
-  /** New program authority. */
-  newAuthority: TransactionSigner<TAccountNewAuthority>;
+    /** Program account to change the authority of. */
+    program: Address<TAccountProgram>;
+    /** Current program authority. */
+    currentAuthority: TransactionSigner<TAccountCurrentAuthority>;
+    /** New program authority. */
+    newAuthority: TransactionSigner<TAccountNewAuthority>;
 };
 
 export function getTransferAuthorityInstruction<
-  TAccountProgram extends string,
-  TAccountCurrentAuthority extends string,
-  TAccountNewAuthority extends string,
-  TProgramAddress extends Address = typeof LOADER_V4_PROGRAM_ADDRESS,
+    TAccountProgram extends string,
+    TAccountCurrentAuthority extends string,
+    TAccountNewAuthority extends string,
+    TProgramAddress extends Address = typeof LOADER_V4_PROGRAM_ADDRESS,
 >(
-  input: TransferAuthorityInput<
-    TAccountProgram,
-    TAccountCurrentAuthority,
-    TAccountNewAuthority
-  >,
-  config?: { programAddress?: TProgramAddress }
-): TransferAuthorityInstruction<
-  TProgramAddress,
-  TAccountProgram,
-  TAccountCurrentAuthority,
-  TAccountNewAuthority
-> {
-  // Program address.
-  const programAddress = config?.programAddress ?? LOADER_V4_PROGRAM_ADDRESS;
+    input: TransferAuthorityInput<TAccountProgram, TAccountCurrentAuthority, TAccountNewAuthority>,
+    config?: { programAddress?: TProgramAddress },
+): TransferAuthorityInstruction<TProgramAddress, TAccountProgram, TAccountCurrentAuthority, TAccountNewAuthority> {
+    // Program address.
+    const programAddress = config?.programAddress ?? LOADER_V4_PROGRAM_ADDRESS;
 
-  // Original accounts.
-  const originalAccounts = {
-    program: { value: input.program ?? null, isWritable: true },
-    currentAuthority: {
-      value: input.currentAuthority ?? null,
-      isWritable: false,
-    },
-    newAuthority: { value: input.newAuthority ?? null, isWritable: false },
-  };
-  const accounts = originalAccounts as Record<
-    keyof typeof originalAccounts,
-    ResolvedInstructionAccount
-  >;
+    // Original accounts.
+    const originalAccounts = {
+        program: { value: input.program ?? null, isWritable: true },
+        currentAuthority: { value: input.currentAuthority ?? null, isWritable: false },
+        newAuthority: { value: input.newAuthority ?? null, isWritable: false },
+    };
+    const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
 
-  const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-  return Object.freeze({
-    accounts: [
-      getAccountMeta('program', accounts.program),
-      getAccountMeta('currentAuthority', accounts.currentAuthority),
-      getAccountMeta('newAuthority', accounts.newAuthority),
-    ],
-    data: getTransferAuthorityInstructionDataEncoder().encode({}),
-    programAddress,
-  } as TransferAuthorityInstruction<
-    TProgramAddress,
-    TAccountProgram,
-    TAccountCurrentAuthority,
-    TAccountNewAuthority
-  >);
+    const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
+    return Object.freeze({
+        accounts: [
+            getAccountMeta('program', accounts.program),
+            getAccountMeta('currentAuthority', accounts.currentAuthority),
+            getAccountMeta('newAuthority', accounts.newAuthority),
+        ],
+        data: getTransferAuthorityInstructionDataEncoder().encode({}),
+        programAddress,
+    } as TransferAuthorityInstruction<
+        TProgramAddress,
+        TAccountProgram,
+        TAccountCurrentAuthority,
+        TAccountNewAuthority
+    >);
 }
 
 export type ParsedTransferAuthorityInstruction<
-  TProgram extends string = typeof LOADER_V4_PROGRAM_ADDRESS,
-  TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
+    TProgram extends string = typeof LOADER_V4_PROGRAM_ADDRESS,
+    TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
 > = {
-  programAddress: Address<TProgram>;
-  accounts: {
-    /** Program account to change the authority of. */
-    program: TAccountMetas[0];
-    /** Current program authority. */
-    currentAuthority: TAccountMetas[1];
-    /** New program authority. */
-    newAuthority: TAccountMetas[2];
-  };
-  data: TransferAuthorityInstructionData;
+    programAddress: Address<TProgram>;
+    accounts: {
+        /** Program account to change the authority of. */
+        program: TAccountMetas[0];
+        /** Current program authority. */
+        currentAuthority: TAccountMetas[1];
+        /** New program authority. */
+        newAuthority: TAccountMetas[2];
+    };
+    data: TransferAuthorityInstructionData;
 };
 
 export function parseTransferAuthorityInstruction<
-  TProgram extends string,
-  TAccountMetas extends readonly AccountMeta[],
+    TProgram extends string,
+    TAccountMetas extends readonly AccountMeta[],
 >(
-  instruction: Instruction<TProgram> &
-    InstructionWithAccounts<TAccountMetas> &
-    InstructionWithData<ReadonlyUint8Array>
+    instruction: Instruction<TProgram> &
+        InstructionWithAccounts<TAccountMetas> &
+        InstructionWithData<ReadonlyUint8Array>,
 ): ParsedTransferAuthorityInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 3) {
-    throw new SolanaError(
-      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-      {
-        actualAccountMetas: instruction.accounts.length,
-        expectedAccountMetas: 3,
-      }
-    );
-  }
-  let accountIndex = 0;
-  const getNextAccount = () => {
-    const accountMeta = (instruction.accounts as TAccountMetas)[accountIndex]!;
-    accountIndex += 1;
-    return accountMeta;
-  };
-  return {
-    programAddress: instruction.programAddress,
-    accounts: {
-      program: getNextAccount(),
-      currentAuthority: getNextAccount(),
-      newAuthority: getNextAccount(),
-    },
-    data: getTransferAuthorityInstructionDataDecoder().decode(instruction.data),
-  };
+    if (instruction.accounts.length < 3) {
+        throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
+            actualAccountMetas: instruction.accounts.length,
+            expectedAccountMetas: 3,
+        });
+    }
+    let accountIndex = 0;
+    const getNextAccount = () => {
+        const accountMeta = (instruction.accounts as TAccountMetas)[accountIndex]!;
+        accountIndex += 1;
+        return accountMeta;
+    };
+    return {
+        programAddress: instruction.programAddress,
+        accounts: { program: getNextAccount(), currentAuthority: getNextAccount(), newAuthority: getNextAccount() },
+        data: getTransferAuthorityInstructionDataDecoder().decode(instruction.data),
+    };
 }

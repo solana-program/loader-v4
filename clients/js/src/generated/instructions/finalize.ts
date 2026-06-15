@@ -7,194 +7,160 @@
  */
 
 import {
-  combineCodec,
-  getStructDecoder,
-  getStructEncoder,
-  getU8Decoder,
-  getU8Encoder,
-  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-  SolanaError,
-  transformEncoder,
-  type AccountMeta,
-  type AccountSignerMeta,
-  type Address,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
-  type Instruction,
-  type InstructionWithAccounts,
-  type InstructionWithData,
-  type ReadonlyAccount,
-  type ReadonlySignerAccount,
-  type ReadonlyUint8Array,
-  type TransactionSigner,
-  type WritableAccount,
+    combineCodec,
+    getStructDecoder,
+    getStructEncoder,
+    getU8Decoder,
+    getU8Encoder,
+    SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+    SolanaError,
+    transformEncoder,
+    type AccountMeta,
+    type AccountSignerMeta,
+    type Address,
+    type FixedSizeCodec,
+    type FixedSizeDecoder,
+    type FixedSizeEncoder,
+    type Instruction,
+    type InstructionWithAccounts,
+    type InstructionWithData,
+    type ReadonlyAccount,
+    type ReadonlySignerAccount,
+    type ReadonlyUint8Array,
+    type TransactionSigner,
+    type WritableAccount,
 } from '@solana/kit';
-import {
-  getAccountMetaFactory,
-  type ResolvedInstructionAccount,
-} from '@solana/kit/program-client-core';
+import { getAccountMetaFactory, type ResolvedInstructionAccount } from '@solana/kit/program-client-core';
 import { LOADER_V4_PROGRAM_ADDRESS } from '../programs';
 
 export const FINALIZE_DISCRIMINATOR = 5;
 
 export function getFinalizeDiscriminatorBytes(): ReadonlyUint8Array {
-  return getU8Encoder().encode(FINALIZE_DISCRIMINATOR);
+    return getU8Encoder().encode(FINALIZE_DISCRIMINATOR);
 }
 
 export type FinalizeInstruction<
-  TProgram extends string = typeof LOADER_V4_PROGRAM_ADDRESS,
-  TAccountProgram extends string | AccountMeta<string> = string,
-  TAccountAuthority extends string | AccountMeta<string> = string,
-  TAccountNextVersion extends string | AccountMeta<string> = string,
-  TRemainingAccounts extends readonly AccountMeta<string>[] = [],
+    TProgram extends string = typeof LOADER_V4_PROGRAM_ADDRESS,
+    TAccountProgram extends string | AccountMeta<string> = string,
+    TAccountAuthority extends string | AccountMeta<string> = string,
+    TAccountNextVersion extends string | AccountMeta<string> = string,
+    TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
-  InstructionWithData<ReadonlyUint8Array> &
-  InstructionWithAccounts<
-    [
-      TAccountProgram extends string
-        ? WritableAccount<TAccountProgram>
-        : TAccountProgram,
-      TAccountAuthority extends string
-        ? ReadonlySignerAccount<TAccountAuthority> &
-            AccountSignerMeta<TAccountAuthority>
-        : TAccountAuthority,
-      TAccountNextVersion extends string
-        ? ReadonlyAccount<TAccountNextVersion>
-        : TAccountNextVersion,
-      ...TRemainingAccounts,
-    ]
-  >;
+    InstructionWithData<ReadonlyUint8Array> &
+    InstructionWithAccounts<
+        [
+            TAccountProgram extends string ? WritableAccount<TAccountProgram> : TAccountProgram,
+            TAccountAuthority extends string
+                ? ReadonlySignerAccount<TAccountAuthority> & AccountSignerMeta<TAccountAuthority>
+                : TAccountAuthority,
+            TAccountNextVersion extends string ? ReadonlyAccount<TAccountNextVersion> : TAccountNextVersion,
+            ...TRemainingAccounts,
+        ]
+    >;
 
 export type FinalizeInstructionData = { discriminator: number };
 
 export type FinalizeInstructionDataArgs = {};
 
 export function getFinalizeInstructionDataEncoder(): FixedSizeEncoder<FinalizeInstructionDataArgs> {
-  return transformEncoder(
-    getStructEncoder([['discriminator', getU8Encoder()]]),
-    (value) => ({ ...value, discriminator: FINALIZE_DISCRIMINATOR })
-  );
+    return transformEncoder(getStructEncoder([['discriminator', getU8Encoder()]]), value => ({
+        ...value,
+        discriminator: FINALIZE_DISCRIMINATOR,
+    }));
 }
 
 export function getFinalizeInstructionDataDecoder(): FixedSizeDecoder<FinalizeInstructionData> {
-  return getStructDecoder([['discriminator', getU8Decoder()]]);
+    return getStructDecoder([['discriminator', getU8Decoder()]]);
 }
 
 export function getFinalizeInstructionDataCodec(): FixedSizeCodec<
-  FinalizeInstructionDataArgs,
-  FinalizeInstructionData
+    FinalizeInstructionDataArgs,
+    FinalizeInstructionData
 > {
-  return combineCodec(
-    getFinalizeInstructionDataEncoder(),
-    getFinalizeInstructionDataDecoder()
-  );
+    return combineCodec(getFinalizeInstructionDataEncoder(), getFinalizeInstructionDataDecoder());
 }
 
 export type FinalizeInput<
-  TAccountProgram extends string = string,
-  TAccountAuthority extends string = string,
-  TAccountNextVersion extends string = string,
+    TAccountProgram extends string = string,
+    TAccountAuthority extends string = string,
+    TAccountNextVersion extends string = string,
 > = {
-  /** Program account to finalize. */
-  program: Address<TAccountProgram>;
-  /** Program authority. */
-  authority: TransactionSigner<TAccountAuthority>;
-  /** The next version of the program (can be itself). */
-  nextVersion: Address<TAccountNextVersion>;
+    /** Program account to finalize. */
+    program: Address<TAccountProgram>;
+    /** Program authority. */
+    authority: TransactionSigner<TAccountAuthority>;
+    /** The next version of the program (can be itself). */
+    nextVersion: Address<TAccountNextVersion>;
 };
 
 export function getFinalizeInstruction<
-  TAccountProgram extends string,
-  TAccountAuthority extends string,
-  TAccountNextVersion extends string,
-  TProgramAddress extends Address = typeof LOADER_V4_PROGRAM_ADDRESS,
+    TAccountProgram extends string,
+    TAccountAuthority extends string,
+    TAccountNextVersion extends string,
+    TProgramAddress extends Address = typeof LOADER_V4_PROGRAM_ADDRESS,
 >(
-  input: FinalizeInput<TAccountProgram, TAccountAuthority, TAccountNextVersion>,
-  config?: { programAddress?: TProgramAddress }
-): FinalizeInstruction<
-  TProgramAddress,
-  TAccountProgram,
-  TAccountAuthority,
-  TAccountNextVersion
-> {
-  // Program address.
-  const programAddress = config?.programAddress ?? LOADER_V4_PROGRAM_ADDRESS;
+    input: FinalizeInput<TAccountProgram, TAccountAuthority, TAccountNextVersion>,
+    config?: { programAddress?: TProgramAddress },
+): FinalizeInstruction<TProgramAddress, TAccountProgram, TAccountAuthority, TAccountNextVersion> {
+    // Program address.
+    const programAddress = config?.programAddress ?? LOADER_V4_PROGRAM_ADDRESS;
 
-  // Original accounts.
-  const originalAccounts = {
-    program: { value: input.program ?? null, isWritable: true },
-    authority: { value: input.authority ?? null, isWritable: false },
-    nextVersion: { value: input.nextVersion ?? null, isWritable: false },
-  };
-  const accounts = originalAccounts as Record<
-    keyof typeof originalAccounts,
-    ResolvedInstructionAccount
-  >;
+    // Original accounts.
+    const originalAccounts = {
+        program: { value: input.program ?? null, isWritable: true },
+        authority: { value: input.authority ?? null, isWritable: false },
+        nextVersion: { value: input.nextVersion ?? null, isWritable: false },
+    };
+    const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
 
-  const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-  return Object.freeze({
-    accounts: [
-      getAccountMeta('program', accounts.program),
-      getAccountMeta('authority', accounts.authority),
-      getAccountMeta('nextVersion', accounts.nextVersion),
-    ],
-    data: getFinalizeInstructionDataEncoder().encode({}),
-    programAddress,
-  } as FinalizeInstruction<
-    TProgramAddress,
-    TAccountProgram,
-    TAccountAuthority,
-    TAccountNextVersion
-  >);
+    const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
+    return Object.freeze({
+        accounts: [
+            getAccountMeta('program', accounts.program),
+            getAccountMeta('authority', accounts.authority),
+            getAccountMeta('nextVersion', accounts.nextVersion),
+        ],
+        data: getFinalizeInstructionDataEncoder().encode({}),
+        programAddress,
+    } as FinalizeInstruction<TProgramAddress, TAccountProgram, TAccountAuthority, TAccountNextVersion>);
 }
 
 export type ParsedFinalizeInstruction<
-  TProgram extends string = typeof LOADER_V4_PROGRAM_ADDRESS,
-  TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
+    TProgram extends string = typeof LOADER_V4_PROGRAM_ADDRESS,
+    TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
 > = {
-  programAddress: Address<TProgram>;
-  accounts: {
-    /** Program account to finalize. */
-    program: TAccountMetas[0];
-    /** Program authority. */
-    authority: TAccountMetas[1];
-    /** The next version of the program (can be itself). */
-    nextVersion: TAccountMetas[2];
-  };
-  data: FinalizeInstructionData;
+    programAddress: Address<TProgram>;
+    accounts: {
+        /** Program account to finalize. */
+        program: TAccountMetas[0];
+        /** Program authority. */
+        authority: TAccountMetas[1];
+        /** The next version of the program (can be itself). */
+        nextVersion: TAccountMetas[2];
+    };
+    data: FinalizeInstructionData;
 };
 
-export function parseFinalizeInstruction<
-  TProgram extends string,
-  TAccountMetas extends readonly AccountMeta[],
->(
-  instruction: Instruction<TProgram> &
-    InstructionWithAccounts<TAccountMetas> &
-    InstructionWithData<ReadonlyUint8Array>
+export function parseFinalizeInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(
+    instruction: Instruction<TProgram> &
+        InstructionWithAccounts<TAccountMetas> &
+        InstructionWithData<ReadonlyUint8Array>,
 ): ParsedFinalizeInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 3) {
-    throw new SolanaError(
-      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-      {
-        actualAccountMetas: instruction.accounts.length,
-        expectedAccountMetas: 3,
-      }
-    );
-  }
-  let accountIndex = 0;
-  const getNextAccount = () => {
-    const accountMeta = (instruction.accounts as TAccountMetas)[accountIndex]!;
-    accountIndex += 1;
-    return accountMeta;
-  };
-  return {
-    programAddress: instruction.programAddress,
-    accounts: {
-      program: getNextAccount(),
-      authority: getNextAccount(),
-      nextVersion: getNextAccount(),
-    },
-    data: getFinalizeInstructionDataDecoder().decode(instruction.data),
-  };
+    if (instruction.accounts.length < 3) {
+        throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
+            actualAccountMetas: instruction.accounts.length,
+            expectedAccountMetas: 3,
+        });
+    }
+    let accountIndex = 0;
+    const getNextAccount = () => {
+        const accountMeta = (instruction.accounts as TAccountMetas)[accountIndex]!;
+        accountIndex += 1;
+        return accountMeta;
+    };
+    return {
+        programAddress: instruction.programAddress,
+        accounts: { program: getNextAccount(), authority: getNextAccount(), nextVersion: getNextAccount() },
+        data: getFinalizeInstructionDataDecoder().decode(instruction.data),
+    };
 }

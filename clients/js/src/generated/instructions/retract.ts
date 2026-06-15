@@ -7,167 +7,140 @@
  */
 
 import {
-  combineCodec,
-  getStructDecoder,
-  getStructEncoder,
-  getU8Decoder,
-  getU8Encoder,
-  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-  SolanaError,
-  transformEncoder,
-  type AccountMeta,
-  type AccountSignerMeta,
-  type Address,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
-  type Instruction,
-  type InstructionWithAccounts,
-  type InstructionWithData,
-  type ReadonlySignerAccount,
-  type ReadonlyUint8Array,
-  type TransactionSigner,
-  type WritableAccount,
+    combineCodec,
+    getStructDecoder,
+    getStructEncoder,
+    getU8Decoder,
+    getU8Encoder,
+    SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+    SolanaError,
+    transformEncoder,
+    type AccountMeta,
+    type AccountSignerMeta,
+    type Address,
+    type FixedSizeCodec,
+    type FixedSizeDecoder,
+    type FixedSizeEncoder,
+    type Instruction,
+    type InstructionWithAccounts,
+    type InstructionWithData,
+    type ReadonlySignerAccount,
+    type ReadonlyUint8Array,
+    type TransactionSigner,
+    type WritableAccount,
 } from '@solana/kit';
-import {
-  getAccountMetaFactory,
-  type ResolvedInstructionAccount,
-} from '@solana/kit/program-client-core';
+import { getAccountMetaFactory, type ResolvedInstructionAccount } from '@solana/kit/program-client-core';
 import { LOADER_V4_PROGRAM_ADDRESS } from '../programs';
 
 export const RETRACT_DISCRIMINATOR = 3;
 
 export function getRetractDiscriminatorBytes(): ReadonlyUint8Array {
-  return getU8Encoder().encode(RETRACT_DISCRIMINATOR);
+    return getU8Encoder().encode(RETRACT_DISCRIMINATOR);
 }
 
 export type RetractInstruction<
-  TProgram extends string = typeof LOADER_V4_PROGRAM_ADDRESS,
-  TAccountProgram extends string | AccountMeta<string> = string,
-  TAccountAuthority extends string | AccountMeta<string> = string,
-  TRemainingAccounts extends readonly AccountMeta<string>[] = [],
+    TProgram extends string = typeof LOADER_V4_PROGRAM_ADDRESS,
+    TAccountProgram extends string | AccountMeta<string> = string,
+    TAccountAuthority extends string | AccountMeta<string> = string,
+    TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
-  InstructionWithData<ReadonlyUint8Array> &
-  InstructionWithAccounts<
-    [
-      TAccountProgram extends string
-        ? WritableAccount<TAccountProgram>
-        : TAccountProgram,
-      TAccountAuthority extends string
-        ? ReadonlySignerAccount<TAccountAuthority> &
-            AccountSignerMeta<TAccountAuthority>
-        : TAccountAuthority,
-      ...TRemainingAccounts,
-    ]
-  >;
+    InstructionWithData<ReadonlyUint8Array> &
+    InstructionWithAccounts<
+        [
+            TAccountProgram extends string ? WritableAccount<TAccountProgram> : TAccountProgram,
+            TAccountAuthority extends string
+                ? ReadonlySignerAccount<TAccountAuthority> & AccountSignerMeta<TAccountAuthority>
+                : TAccountAuthority,
+            ...TRemainingAccounts,
+        ]
+    >;
 
 export type RetractInstructionData = { discriminator: number };
 
 export type RetractInstructionDataArgs = {};
 
 export function getRetractInstructionDataEncoder(): FixedSizeEncoder<RetractInstructionDataArgs> {
-  return transformEncoder(
-    getStructEncoder([['discriminator', getU8Encoder()]]),
-    (value) => ({ ...value, discriminator: RETRACT_DISCRIMINATOR })
-  );
+    return transformEncoder(getStructEncoder([['discriminator', getU8Encoder()]]), value => ({
+        ...value,
+        discriminator: RETRACT_DISCRIMINATOR,
+    }));
 }
 
 export function getRetractInstructionDataDecoder(): FixedSizeDecoder<RetractInstructionData> {
-  return getStructDecoder([['discriminator', getU8Decoder()]]);
+    return getStructDecoder([['discriminator', getU8Decoder()]]);
 }
 
-export function getRetractInstructionDataCodec(): FixedSizeCodec<
-  RetractInstructionDataArgs,
-  RetractInstructionData
-> {
-  return combineCodec(
-    getRetractInstructionDataEncoder(),
-    getRetractInstructionDataDecoder()
-  );
+export function getRetractInstructionDataCodec(): FixedSizeCodec<RetractInstructionDataArgs, RetractInstructionData> {
+    return combineCodec(getRetractInstructionDataEncoder(), getRetractInstructionDataDecoder());
 }
 
-export type RetractInput<
-  TAccountProgram extends string = string,
-  TAccountAuthority extends string = string,
-> = {
-  /** Program account to retract. */
-  program: Address<TAccountProgram>;
-  /** Program authority. */
-  authority: TransactionSigner<TAccountAuthority>;
+export type RetractInput<TAccountProgram extends string = string, TAccountAuthority extends string = string> = {
+    /** Program account to retract. */
+    program: Address<TAccountProgram>;
+    /** Program authority. */
+    authority: TransactionSigner<TAccountAuthority>;
 };
 
 export function getRetractInstruction<
-  TAccountProgram extends string,
-  TAccountAuthority extends string,
-  TProgramAddress extends Address = typeof LOADER_V4_PROGRAM_ADDRESS,
+    TAccountProgram extends string,
+    TAccountAuthority extends string,
+    TProgramAddress extends Address = typeof LOADER_V4_PROGRAM_ADDRESS,
 >(
-  input: RetractInput<TAccountProgram, TAccountAuthority>,
-  config?: { programAddress?: TProgramAddress }
+    input: RetractInput<TAccountProgram, TAccountAuthority>,
+    config?: { programAddress?: TProgramAddress },
 ): RetractInstruction<TProgramAddress, TAccountProgram, TAccountAuthority> {
-  // Program address.
-  const programAddress = config?.programAddress ?? LOADER_V4_PROGRAM_ADDRESS;
+    // Program address.
+    const programAddress = config?.programAddress ?? LOADER_V4_PROGRAM_ADDRESS;
 
-  // Original accounts.
-  const originalAccounts = {
-    program: { value: input.program ?? null, isWritable: true },
-    authority: { value: input.authority ?? null, isWritable: false },
-  };
-  const accounts = originalAccounts as Record<
-    keyof typeof originalAccounts,
-    ResolvedInstructionAccount
-  >;
+    // Original accounts.
+    const originalAccounts = {
+        program: { value: input.program ?? null, isWritable: true },
+        authority: { value: input.authority ?? null, isWritable: false },
+    };
+    const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
 
-  const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-  return Object.freeze({
-    accounts: [
-      getAccountMeta('program', accounts.program),
-      getAccountMeta('authority', accounts.authority),
-    ],
-    data: getRetractInstructionDataEncoder().encode({}),
-    programAddress,
-  } as RetractInstruction<TProgramAddress, TAccountProgram, TAccountAuthority>);
+    const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
+    return Object.freeze({
+        accounts: [getAccountMeta('program', accounts.program), getAccountMeta('authority', accounts.authority)],
+        data: getRetractInstructionDataEncoder().encode({}),
+        programAddress,
+    } as RetractInstruction<TProgramAddress, TAccountProgram, TAccountAuthority>);
 }
 
 export type ParsedRetractInstruction<
-  TProgram extends string = typeof LOADER_V4_PROGRAM_ADDRESS,
-  TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
+    TProgram extends string = typeof LOADER_V4_PROGRAM_ADDRESS,
+    TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
 > = {
-  programAddress: Address<TProgram>;
-  accounts: {
-    /** Program account to retract. */
-    program: TAccountMetas[0];
-    /** Program authority. */
-    authority: TAccountMetas[1];
-  };
-  data: RetractInstructionData;
+    programAddress: Address<TProgram>;
+    accounts: {
+        /** Program account to retract. */
+        program: TAccountMetas[0];
+        /** Program authority. */
+        authority: TAccountMetas[1];
+    };
+    data: RetractInstructionData;
 };
 
-export function parseRetractInstruction<
-  TProgram extends string,
-  TAccountMetas extends readonly AccountMeta[],
->(
-  instruction: Instruction<TProgram> &
-    InstructionWithAccounts<TAccountMetas> &
-    InstructionWithData<ReadonlyUint8Array>
+export function parseRetractInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(
+    instruction: Instruction<TProgram> &
+        InstructionWithAccounts<TAccountMetas> &
+        InstructionWithData<ReadonlyUint8Array>,
 ): ParsedRetractInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 2) {
-    throw new SolanaError(
-      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-      {
-        actualAccountMetas: instruction.accounts.length,
-        expectedAccountMetas: 2,
-      }
-    );
-  }
-  let accountIndex = 0;
-  const getNextAccount = () => {
-    const accountMeta = (instruction.accounts as TAccountMetas)[accountIndex]!;
-    accountIndex += 1;
-    return accountMeta;
-  };
-  return {
-    programAddress: instruction.programAddress,
-    accounts: { program: getNextAccount(), authority: getNextAccount() },
-    data: getRetractInstructionDataDecoder().decode(instruction.data),
-  };
+    if (instruction.accounts.length < 2) {
+        throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
+            actualAccountMetas: instruction.accounts.length,
+            expectedAccountMetas: 2,
+        });
+    }
+    let accountIndex = 0;
+    const getNextAccount = () => {
+        const accountMeta = (instruction.accounts as TAccountMetas)[accountIndex]!;
+        accountIndex += 1;
+        return accountMeta;
+    };
+    return {
+        programAddress: instruction.programAddress,
+        accounts: { program: getNextAccount(), authority: getNextAccount() },
+        data: getRetractInstructionDataDecoder().decode(instruction.data),
+    };
 }
