@@ -17,6 +17,7 @@ import {
     type Address,
     type ClientWithTransactionPlanning,
     type ClientWithTransactionSending,
+    type ExtendedClient,
     type Instruction,
     type InstructionWithData,
     type ReadonlyUint8Array,
@@ -137,7 +138,11 @@ export function parseLoaderV4Instruction<TProgram extends string>(
     }
 }
 
-export type LoaderV4Plugin = { instructions: LoaderV4PluginInstructions };
+export type LoaderV4Plugin = {
+    instructions: LoaderV4PluginInstructions;
+    identifyInstruction: typeof identifyLoaderV4Instruction;
+    parseInstruction: typeof parseLoaderV4Instruction;
+};
 
 export type LoaderV4PluginInstructions = {
     write: (input: WriteInput) => ReturnType<typeof getWriteInstruction> & SelfPlanAndSendFunctions;
@@ -153,7 +158,7 @@ export type LoaderV4PluginInstructions = {
 export type LoaderV4PluginRequirements = ClientWithTransactionPlanning & ClientWithTransactionSending;
 
 export function loaderV4Program() {
-    return <T extends LoaderV4PluginRequirements>(client: T): Omit<T, 'loaderV4'> & { loaderV4: LoaderV4Plugin } => {
+    return <T extends LoaderV4PluginRequirements>(client: T): ExtendedClient<T, { loaderV4: LoaderV4Plugin }> => {
         return extendClient(client, {
             loaderV4: <LoaderV4Plugin>{
                 instructions: {
@@ -165,6 +170,8 @@ export function loaderV4Program() {
                         addSelfPlanAndSendFunctions(client, getTransferAuthorityInstruction(input)),
                     finalize: input => addSelfPlanAndSendFunctions(client, getFinalizeInstruction(input)),
                 },
+                identifyInstruction: identifyLoaderV4Instruction,
+                parseInstruction: parseLoaderV4Instruction,
             },
         });
     };
