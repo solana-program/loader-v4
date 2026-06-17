@@ -1,5 +1,5 @@
 {
-    "name": "@solana-program/solana-loader-v4",
+    "name": "@solana-program/loader-v4",
     "version": "0.0.0",
     "description": "JavaScript client for the Solana Loader V4 program",
     "homepage": "https://github.com/solana-program/loader-v4#readme",
