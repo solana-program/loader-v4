@@ -26,10 +26,16 @@ import {
     type InstructionWithData,
     type ReadonlySignerAccount,
     type ReadonlyUint8Array,
-    type TransactionSigner,
     type WritableAccount,
 } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '@solana/kit/program-client-core';
+import {
+    getAccountMetaFactory,
+    type InstructionAccountInput,
+    type InstructionAccountInputAddress,
+    type InstructionSignerInput,
+    type ResolvedInstructionAccount,
+    type ResolvedInstructionAccountMeta,
+} from '@solana/kit/program-client-core';
 import { LOADER_V4_PROGRAM_ADDRESS } from '../programs';
 
 export const TRANSFER_AUTHORITY_DISCRIMINATOR = 4;
@@ -82,39 +88,46 @@ export function getTransferAuthorityInstructionDataCodec(): FixedSizeCodec<
 }
 
 export type TransferAuthorityInput<
-    TAccountProgram extends string = string,
-    TAccountCurrentAuthority extends string = string,
-    TAccountNewAuthority extends string = string,
+    TAccountProgram extends InstructionAccountInput = InstructionAccountInput,
+    TAccountCurrentAuthority extends InstructionSignerInput = InstructionSignerInput,
+    TAccountNewAuthority extends InstructionSignerInput = InstructionSignerInput,
 > = {
     /** Program account to change the authority of. */
-    program: Address<TAccountProgram>;
+    program: TAccountProgram;
     /** Current program authority. */
-    currentAuthority: TransactionSigner<TAccountCurrentAuthority>;
+    currentAuthority: TAccountCurrentAuthority;
     /** New program authority. */
-    newAuthority: TransactionSigner<TAccountNewAuthority>;
+    newAuthority: TAccountNewAuthority;
 };
 
 export function getTransferAuthorityInstruction<
-    TAccountProgram extends string,
-    TAccountCurrentAuthority extends string,
-    TAccountNewAuthority extends string,
+    TAccountProgram extends InstructionAccountInput,
+    TAccountCurrentAuthority extends InstructionSignerInput,
+    TAccountNewAuthority extends InstructionSignerInput,
     TProgramAddress extends Address = typeof LOADER_V4_PROGRAM_ADDRESS,
 >(
     input: TransferAuthorityInput<TAccountProgram, TAccountCurrentAuthority, TAccountNewAuthority>,
     config?: { programAddress?: TProgramAddress },
-): TransferAuthorityInstruction<TProgramAddress, TAccountProgram, TAccountCurrentAuthority, TAccountNewAuthority> {
+): TransferAuthorityInstruction<
+    TProgramAddress,
+    ResolvedInstructionAccountMeta<TAccountProgram, InstructionAccountInputAddress<TAccountProgram>>,
+    ResolvedInstructionAccountMeta<TAccountCurrentAuthority, InstructionAccountInputAddress<TAccountCurrentAuthority>>,
+    ResolvedInstructionAccountMeta<TAccountNewAuthority, InstructionAccountInputAddress<TAccountNewAuthority>>
+> {
     // Program address.
     const programAddress = config?.programAddress ?? LOADER_V4_PROGRAM_ADDRESS;
 
+    // Account meta helper.
+    const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
+
     // Original accounts.
     const originalAccounts = {
-        program: { value: input.program ?? null, isWritable: true },
-        currentAuthority: { value: input.currentAuthority ?? null, isWritable: false },
-        newAuthority: { value: input.newAuthority ?? null, isWritable: false },
+        program: { value: input.program ?? null, isSigner: false, isWritable: true },
+        currentAuthority: { value: input.currentAuthority ?? null, isSigner: true, isWritable: false },
+        newAuthority: { value: input.newAuthority ?? null, isSigner: true, isWritable: false },
     };
     const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
 
-    const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
     return Object.freeze({
         accounts: [
             getAccountMeta('program', accounts.program),
@@ -125,9 +138,12 @@ export function getTransferAuthorityInstruction<
         programAddress,
     } as TransferAuthorityInstruction<
         TProgramAddress,
-        TAccountProgram,
-        TAccountCurrentAuthority,
-        TAccountNewAuthority
+        ResolvedInstructionAccountMeta<TAccountProgram, InstructionAccountInputAddress<TAccountProgram>>,
+        ResolvedInstructionAccountMeta<
+            TAccountCurrentAuthority,
+            InstructionAccountInputAddress<TAccountCurrentAuthority>
+        >,
+        ResolvedInstructionAccountMeta<TAccountNewAuthority, InstructionAccountInputAddress<TAccountNewAuthority>>
     >);
 }
 

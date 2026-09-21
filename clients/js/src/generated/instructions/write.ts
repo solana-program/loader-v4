@@ -32,10 +32,16 @@ import {
     type InstructionWithData,
     type ReadonlySignerAccount,
     type ReadonlyUint8Array,
-    type TransactionSigner,
     type WritableAccount,
 } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '@solana/kit/program-client-core';
+import {
+    getAccountMetaFactory,
+    type InstructionAccountInput,
+    type InstructionAccountInputAddress,
+    type InstructionSignerInput,
+    type ResolvedInstructionAccount,
+    type ResolvedInstructionAccountMeta,
+} from '@solana/kit/program-client-core';
 import { LOADER_V4_PROGRAM_ADDRESS } from '../programs';
 
 export const WRITE_DISCRIMINATOR = 0;
@@ -88,42 +94,55 @@ export function getWriteInstructionDataCodec(): Codec<WriteInstructionDataArgs, 
     return combineCodec(getWriteInstructionDataEncoder(), getWriteInstructionDataDecoder());
 }
 
-export type WriteInput<TAccountProgram extends string = string, TAccountAuthority extends string = string> = {
+export type WriteInput<
+    TAccountProgram extends InstructionAccountInput = InstructionAccountInput,
+    TAccountAuthority extends InstructionSignerInput = InstructionSignerInput,
+> = {
     /** Program account to write to. */
-    program: Address<TAccountProgram>;
+    program: TAccountProgram;
     /** Program authority. */
-    authority: TransactionSigner<TAccountAuthority>;
+    authority: TAccountAuthority;
     offset: WriteInstructionDataArgs['offset'];
     bytes: WriteInstructionDataArgs['bytes'];
 };
 
 export function getWriteInstruction<
-    TAccountProgram extends string,
-    TAccountAuthority extends string,
+    TAccountProgram extends InstructionAccountInput,
+    TAccountAuthority extends InstructionSignerInput,
     TProgramAddress extends Address = typeof LOADER_V4_PROGRAM_ADDRESS,
 >(
     input: WriteInput<TAccountProgram, TAccountAuthority>,
     config?: { programAddress?: TProgramAddress },
-): WriteInstruction<TProgramAddress, TAccountProgram, TAccountAuthority> {
+): WriteInstruction<
+    TProgramAddress,
+    ResolvedInstructionAccountMeta<TAccountProgram, InstructionAccountInputAddress<TAccountProgram>>,
+    ResolvedInstructionAccountMeta<TAccountAuthority, InstructionAccountInputAddress<TAccountAuthority>>
+> {
     // Program address.
     const programAddress = config?.programAddress ?? LOADER_V4_PROGRAM_ADDRESS;
 
+    // Account meta helper.
+    const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
+
     // Original accounts.
     const originalAccounts = {
-        program: { value: input.program ?? null, isWritable: true },
-        authority: { value: input.authority ?? null, isWritable: false },
+        program: { value: input.program ?? null, isSigner: false, isWritable: true },
+        authority: { value: input.authority ?? null, isSigner: true, isWritable: false },
     };
     const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
 
     // Original args.
     const args = { ...input };
 
-    const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
     return Object.freeze({
         accounts: [getAccountMeta('program', accounts.program), getAccountMeta('authority', accounts.authority)],
         data: getWriteInstructionDataEncoder().encode(args as WriteInstructionDataArgs),
         programAddress,
-    } as WriteInstruction<TProgramAddress, TAccountProgram, TAccountAuthority>);
+    } as WriteInstruction<
+        TProgramAddress,
+        ResolvedInstructionAccountMeta<TAccountProgram, InstructionAccountInputAddress<TAccountProgram>>,
+        ResolvedInstructionAccountMeta<TAccountAuthority, InstructionAccountInputAddress<TAccountAuthority>>
+    >);
 }
 
 export type ParsedWriteInstruction<

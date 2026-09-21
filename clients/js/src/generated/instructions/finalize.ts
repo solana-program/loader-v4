@@ -27,10 +27,16 @@ import {
     type ReadonlyAccount,
     type ReadonlySignerAccount,
     type ReadonlyUint8Array,
-    type TransactionSigner,
     type WritableAccount,
 } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '@solana/kit/program-client-core';
+import {
+    getAccountMetaFactory,
+    type InstructionAccountInput,
+    type InstructionAccountInputAddress,
+    type InstructionSignerInput,
+    type ResolvedInstructionAccount,
+    type ResolvedInstructionAccountMeta,
+} from '@solana/kit/program-client-core';
 import { LOADER_V4_PROGRAM_ADDRESS } from '../programs';
 
 export const FINALIZE_DISCRIMINATOR = 5;
@@ -81,39 +87,46 @@ export function getFinalizeInstructionDataCodec(): FixedSizeCodec<
 }
 
 export type FinalizeInput<
-    TAccountProgram extends string = string,
-    TAccountAuthority extends string = string,
-    TAccountNextVersion extends string = string,
+    TAccountProgram extends InstructionAccountInput = InstructionAccountInput,
+    TAccountAuthority extends InstructionSignerInput = InstructionSignerInput,
+    TAccountNextVersion extends InstructionAccountInput = InstructionAccountInput,
 > = {
     /** Program account to finalize. */
-    program: Address<TAccountProgram>;
+    program: TAccountProgram;
     /** Program authority. */
-    authority: TransactionSigner<TAccountAuthority>;
+    authority: TAccountAuthority;
     /** The next version of the program (can be itself). */
-    nextVersion: Address<TAccountNextVersion>;
+    nextVersion: TAccountNextVersion;
 };
 
 export function getFinalizeInstruction<
-    TAccountProgram extends string,
-    TAccountAuthority extends string,
-    TAccountNextVersion extends string,
+    TAccountProgram extends InstructionAccountInput,
+    TAccountAuthority extends InstructionSignerInput,
+    TAccountNextVersion extends InstructionAccountInput,
     TProgramAddress extends Address = typeof LOADER_V4_PROGRAM_ADDRESS,
 >(
     input: FinalizeInput<TAccountProgram, TAccountAuthority, TAccountNextVersion>,
     config?: { programAddress?: TProgramAddress },
-): FinalizeInstruction<TProgramAddress, TAccountProgram, TAccountAuthority, TAccountNextVersion> {
+): FinalizeInstruction<
+    TProgramAddress,
+    ResolvedInstructionAccountMeta<TAccountProgram, InstructionAccountInputAddress<TAccountProgram>>,
+    ResolvedInstructionAccountMeta<TAccountAuthority, InstructionAccountInputAddress<TAccountAuthority>>,
+    ResolvedInstructionAccountMeta<TAccountNextVersion, InstructionAccountInputAddress<TAccountNextVersion>>
+> {
     // Program address.
     const programAddress = config?.programAddress ?? LOADER_V4_PROGRAM_ADDRESS;
 
+    // Account meta helper.
+    const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
+
     // Original accounts.
     const originalAccounts = {
-        program: { value: input.program ?? null, isWritable: true },
-        authority: { value: input.authority ?? null, isWritable: false },
-        nextVersion: { value: input.nextVersion ?? null, isWritable: false },
+        program: { value: input.program ?? null, isSigner: false, isWritable: true },
+        authority: { value: input.authority ?? null, isSigner: true, isWritable: false },
+        nextVersion: { value: input.nextVersion ?? null, isSigner: false, isWritable: false },
     };
     const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
 
-    const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
     return Object.freeze({
         accounts: [
             getAccountMeta('program', accounts.program),
@@ -122,7 +135,12 @@ export function getFinalizeInstruction<
         ],
         data: getFinalizeInstructionDataEncoder().encode({}),
         programAddress,
-    } as FinalizeInstruction<TProgramAddress, TAccountProgram, TAccountAuthority, TAccountNextVersion>);
+    } as FinalizeInstruction<
+        TProgramAddress,
+        ResolvedInstructionAccountMeta<TAccountProgram, InstructionAccountInputAddress<TAccountProgram>>,
+        ResolvedInstructionAccountMeta<TAccountAuthority, InstructionAccountInputAddress<TAccountAuthority>>,
+        ResolvedInstructionAccountMeta<TAccountNextVersion, InstructionAccountInputAddress<TAccountNextVersion>>
+    >);
 }
 
 export type ParsedFinalizeInstruction<
