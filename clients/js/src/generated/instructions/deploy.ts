@@ -26,10 +26,16 @@ import {
     type InstructionWithData,
     type ReadonlySignerAccount,
     type ReadonlyUint8Array,
-    type TransactionSigner,
     type WritableAccount,
 } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '@solana/kit/program-client-core';
+import {
+    getAccountMetaFactory,
+    type InstructionAccountInput,
+    type InstructionAccountInputAddress,
+    type InstructionSignerInput,
+    type ResolvedInstructionAccount,
+    type ResolvedInstructionAccountMeta,
+} from '@solana/kit/program-client-core';
 import { LOADER_V4_PROGRAM_ADDRESS } from '../programs';
 
 export const DEPLOY_DISCRIMINATOR = 2;
@@ -77,39 +83,46 @@ export function getDeployInstructionDataCodec(): FixedSizeCodec<DeployInstructio
 }
 
 export type DeployInput<
-    TAccountProgram extends string = string,
-    TAccountAuthority extends string = string,
-    TAccountSource extends string = string,
+    TAccountProgram extends InstructionAccountInput = InstructionAccountInput,
+    TAccountAuthority extends InstructionSignerInput = InstructionSignerInput,
+    TAccountSource extends InstructionAccountInput = InstructionAccountInput,
 > = {
     /** Program account to deploy. */
-    program: Address<TAccountProgram>;
+    program: TAccountProgram;
     /** Program authority. */
-    authority: TransactionSigner<TAccountAuthority>;
+    authority: TAccountAuthority;
     /** Undeployed source program account to take data and lamports from (optional). */
-    source?: Address<TAccountSource>;
+    source?: TAccountSource;
 };
 
 export function getDeployInstruction<
-    TAccountProgram extends string,
-    TAccountAuthority extends string,
-    TAccountSource extends string,
+    TAccountProgram extends InstructionAccountInput,
+    TAccountAuthority extends InstructionSignerInput,
+    TAccountSource extends InstructionAccountInput,
     TProgramAddress extends Address = typeof LOADER_V4_PROGRAM_ADDRESS,
 >(
     input: DeployInput<TAccountProgram, TAccountAuthority, TAccountSource>,
     config?: { programAddress?: TProgramAddress },
-): DeployInstruction<TProgramAddress, TAccountProgram, TAccountAuthority, TAccountSource> {
+): DeployInstruction<
+    TProgramAddress,
+    ResolvedInstructionAccountMeta<TAccountProgram, InstructionAccountInputAddress<TAccountProgram>>,
+    ResolvedInstructionAccountMeta<TAccountAuthority, InstructionAccountInputAddress<TAccountAuthority>>,
+    ResolvedInstructionAccountMeta<TAccountSource, InstructionAccountInputAddress<TAccountSource>>
+> {
     // Program address.
     const programAddress = config?.programAddress ?? LOADER_V4_PROGRAM_ADDRESS;
 
+    // Account meta helper.
+    const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
+
     // Original accounts.
     const originalAccounts = {
-        program: { value: input.program ?? null, isWritable: true },
-        authority: { value: input.authority ?? null, isWritable: false },
-        source: { value: input.source ?? null, isWritable: true },
+        program: { value: input.program ?? null, isSigner: false, isWritable: true },
+        authority: { value: input.authority ?? null, isSigner: true, isWritable: false },
+        source: { value: input.source ?? null, isSigner: false, isWritable: true },
     };
     const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
 
-    const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
     return Object.freeze({
         accounts: [
             getAccountMeta('program', accounts.program),
@@ -118,7 +131,12 @@ export function getDeployInstruction<
         ],
         data: getDeployInstructionDataEncoder().encode({}),
         programAddress,
-    } as DeployInstruction<TProgramAddress, TAccountProgram, TAccountAuthority, TAccountSource>);
+    } as DeployInstruction<
+        TProgramAddress,
+        ResolvedInstructionAccountMeta<TAccountProgram, InstructionAccountInputAddress<TAccountProgram>>,
+        ResolvedInstructionAccountMeta<TAccountAuthority, InstructionAccountInputAddress<TAccountAuthority>>,
+        ResolvedInstructionAccountMeta<TAccountSource, InstructionAccountInputAddress<TAccountSource>>
+    >);
 }
 
 export type ParsedDeployInstruction<

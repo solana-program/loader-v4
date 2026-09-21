@@ -28,11 +28,17 @@ import {
     type InstructionWithData,
     type ReadonlySignerAccount,
     type ReadonlyUint8Array,
-    type TransactionSigner,
     type WritableAccount,
     type WritableSignerAccount,
 } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '@solana/kit/program-client-core';
+import {
+    getAccountMetaFactory,
+    type InstructionAccountInput,
+    type InstructionAccountInputAddress,
+    type InstructionSignerInput,
+    type ResolvedInstructionAccount,
+    type ResolvedInstructionAccountMeta,
+} from '@solana/kit/program-client-core';
 import { LOADER_V4_PROGRAM_ADDRESS } from '../programs';
 
 export const TRUNCATE_DISCRIMINATOR = 1;
@@ -91,43 +97,50 @@ export function getTruncateInstructionDataCodec(): FixedSizeCodec<
 }
 
 export type TruncateInput<
-    TAccountProgram extends string = string,
-    TAccountAuthority extends string = string,
-    TAccountDestination extends string = string,
+    TAccountProgram extends InstructionSignerInput = InstructionSignerInput,
+    TAccountAuthority extends InstructionSignerInput = InstructionSignerInput,
+    TAccountDestination extends InstructionAccountInput = InstructionAccountInput,
 > = {
     /** Program account to change the size of. */
-    program: TransactionSigner<TAccountProgram>;
+    program: TAccountProgram;
     /** Program authority. */
-    authority: TransactionSigner<TAccountAuthority>;
+    authority: TAccountAuthority;
     /** Destination account for reclaimed lamports (optional). */
-    destination?: Address<TAccountDestination>;
+    destination?: TAccountDestination;
     newSize: TruncateInstructionDataArgs['newSize'];
 };
 
 export function getTruncateInstruction<
-    TAccountProgram extends string,
-    TAccountAuthority extends string,
-    TAccountDestination extends string,
+    TAccountProgram extends InstructionSignerInput,
+    TAccountAuthority extends InstructionSignerInput,
+    TAccountDestination extends InstructionAccountInput,
     TProgramAddress extends Address = typeof LOADER_V4_PROGRAM_ADDRESS,
 >(
     input: TruncateInput<TAccountProgram, TAccountAuthority, TAccountDestination>,
     config?: { programAddress?: TProgramAddress },
-): TruncateInstruction<TProgramAddress, TAccountProgram, TAccountAuthority, TAccountDestination> {
+): TruncateInstruction<
+    TProgramAddress,
+    ResolvedInstructionAccountMeta<TAccountProgram, InstructionAccountInputAddress<TAccountProgram>>,
+    ResolvedInstructionAccountMeta<TAccountAuthority, InstructionAccountInputAddress<TAccountAuthority>>,
+    ResolvedInstructionAccountMeta<TAccountDestination, InstructionAccountInputAddress<TAccountDestination>>
+> {
     // Program address.
     const programAddress = config?.programAddress ?? LOADER_V4_PROGRAM_ADDRESS;
 
+    // Account meta helper.
+    const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
+
     // Original accounts.
     const originalAccounts = {
-        program: { value: input.program ?? null, isWritable: true },
-        authority: { value: input.authority ?? null, isWritable: false },
-        destination: { value: input.destination ?? null, isWritable: true },
+        program: { value: input.program ?? null, isSigner: true, isWritable: true },
+        authority: { value: input.authority ?? null, isSigner: true, isWritable: false },
+        destination: { value: input.destination ?? null, isSigner: false, isWritable: true },
     };
     const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
 
     // Original args.
     const args = { ...input };
 
-    const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
     return Object.freeze({
         accounts: [
             getAccountMeta('program', accounts.program),
@@ -136,7 +149,12 @@ export function getTruncateInstruction<
         ],
         data: getTruncateInstructionDataEncoder().encode(args as TruncateInstructionDataArgs),
         programAddress,
-    } as TruncateInstruction<TProgramAddress, TAccountProgram, TAccountAuthority, TAccountDestination>);
+    } as TruncateInstruction<
+        TProgramAddress,
+        ResolvedInstructionAccountMeta<TAccountProgram, InstructionAccountInputAddress<TAccountProgram>>,
+        ResolvedInstructionAccountMeta<TAccountAuthority, InstructionAccountInputAddress<TAccountAuthority>>,
+        ResolvedInstructionAccountMeta<TAccountDestination, InstructionAccountInputAddress<TAccountDestination>>
+    >);
 }
 
 export type ParsedTruncateInstruction<

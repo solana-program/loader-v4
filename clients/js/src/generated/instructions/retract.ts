@@ -26,10 +26,16 @@ import {
     type InstructionWithData,
     type ReadonlySignerAccount,
     type ReadonlyUint8Array,
-    type TransactionSigner,
     type WritableAccount,
 } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '@solana/kit/program-client-core';
+import {
+    getAccountMetaFactory,
+    type InstructionAccountInput,
+    type InstructionAccountInputAddress,
+    type InstructionSignerInput,
+    type ResolvedInstructionAccount,
+    type ResolvedInstructionAccountMeta,
+} from '@solana/kit/program-client-core';
 import { LOADER_V4_PROGRAM_ADDRESS } from '../programs';
 
 export const RETRACT_DISCRIMINATOR = 3;
@@ -74,37 +80,50 @@ export function getRetractInstructionDataCodec(): FixedSizeCodec<RetractInstruct
     return combineCodec(getRetractInstructionDataEncoder(), getRetractInstructionDataDecoder());
 }
 
-export type RetractInput<TAccountProgram extends string = string, TAccountAuthority extends string = string> = {
+export type RetractInput<
+    TAccountProgram extends InstructionAccountInput = InstructionAccountInput,
+    TAccountAuthority extends InstructionSignerInput = InstructionSignerInput,
+> = {
     /** Program account to retract. */
-    program: Address<TAccountProgram>;
+    program: TAccountProgram;
     /** Program authority. */
-    authority: TransactionSigner<TAccountAuthority>;
+    authority: TAccountAuthority;
 };
 
 export function getRetractInstruction<
-    TAccountProgram extends string,
-    TAccountAuthority extends string,
+    TAccountProgram extends InstructionAccountInput,
+    TAccountAuthority extends InstructionSignerInput,
     TProgramAddress extends Address = typeof LOADER_V4_PROGRAM_ADDRESS,
 >(
     input: RetractInput<TAccountProgram, TAccountAuthority>,
     config?: { programAddress?: TProgramAddress },
-): RetractInstruction<TProgramAddress, TAccountProgram, TAccountAuthority> {
+): RetractInstruction<
+    TProgramAddress,
+    ResolvedInstructionAccountMeta<TAccountProgram, InstructionAccountInputAddress<TAccountProgram>>,
+    ResolvedInstructionAccountMeta<TAccountAuthority, InstructionAccountInputAddress<TAccountAuthority>>
+> {
     // Program address.
     const programAddress = config?.programAddress ?? LOADER_V4_PROGRAM_ADDRESS;
 
+    // Account meta helper.
+    const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
+
     // Original accounts.
     const originalAccounts = {
-        program: { value: input.program ?? null, isWritable: true },
-        authority: { value: input.authority ?? null, isWritable: false },
+        program: { value: input.program ?? null, isSigner: false, isWritable: true },
+        authority: { value: input.authority ?? null, isSigner: true, isWritable: false },
     };
     const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
 
-    const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
     return Object.freeze({
         accounts: [getAccountMeta('program', accounts.program), getAccountMeta('authority', accounts.authority)],
         data: getRetractInstructionDataEncoder().encode({}),
         programAddress,
-    } as RetractInstruction<TProgramAddress, TAccountProgram, TAccountAuthority>);
+    } as RetractInstruction<
+        TProgramAddress,
+        ResolvedInstructionAccountMeta<TAccountProgram, InstructionAccountInputAddress<TAccountProgram>>,
+        ResolvedInstructionAccountMeta<TAccountAuthority, InstructionAccountInputAddress<TAccountAuthority>>
+    >);
 }
 
 export type ParsedRetractInstruction<
