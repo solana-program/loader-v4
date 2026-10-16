@@ -18,6 +18,7 @@ import {
     type ClientWithTransactionPlanning,
     type ClientWithTransactionSending,
     type ExtendedClient,
+    type HasAddress,
     type Instruction,
     type InstructionWithData,
     type ReadonlyUint8Array,
@@ -145,30 +146,81 @@ export type LoaderV4Plugin = {
 };
 
 export type LoaderV4PluginInstructions = {
-    write: (input: WriteInput) => ReturnType<typeof getWriteInstruction> & SelfPlanAndSendFunctions;
-    truncate: (input: TruncateInput) => ReturnType<typeof getTruncateInstruction> & SelfPlanAndSendFunctions;
-    deploy: (input: DeployInput) => ReturnType<typeof getDeployInstruction> & SelfPlanAndSendFunctions;
-    retract: (input: RetractInput) => ReturnType<typeof getRetractInstruction> & SelfPlanAndSendFunctions;
+    write: (
+        input: WriteInput,
+        config?: { programAddress?: Address | HasAddress },
+    ) => ReturnType<typeof getWriteInstruction> & SelfPlanAndSendFunctions;
+    truncate: (
+        input: TruncateInput,
+        config?: { programAddress?: Address | HasAddress },
+    ) => ReturnType<typeof getTruncateInstruction> & SelfPlanAndSendFunctions;
+    deploy: (
+        input: DeployInput,
+        config?: { programAddress?: Address | HasAddress },
+    ) => ReturnType<typeof getDeployInstruction> & SelfPlanAndSendFunctions;
+    retract: (
+        input: RetractInput,
+        config?: { programAddress?: Address | HasAddress },
+    ) => ReturnType<typeof getRetractInstruction> & SelfPlanAndSendFunctions;
     transferAuthority: (
         input: TransferAuthorityInput,
+        config?: { programAddress?: Address | HasAddress },
     ) => ReturnType<typeof getTransferAuthorityInstruction> & SelfPlanAndSendFunctions;
-    finalize: (input: FinalizeInput) => ReturnType<typeof getFinalizeInstruction> & SelfPlanAndSendFunctions;
+    finalize: (
+        input: FinalizeInput,
+        config?: { programAddress?: Address | HasAddress },
+    ) => ReturnType<typeof getFinalizeInstruction> & SelfPlanAndSendFunctions;
 };
 
 export type LoaderV4PluginRequirements = ClientWithTransactionPlanning & ClientWithTransactionSending;
 
-export function loaderV4Program() {
+export function loaderV4Program(config: { programAddress?: Address | HasAddress } = {}) {
     return <T extends LoaderV4PluginRequirements>(client: T): ExtendedClient<T, { loaderV4: LoaderV4Plugin }> => {
         return extendClient(client, {
             loaderV4: <LoaderV4Plugin>{
                 instructions: {
-                    write: input => addSelfPlanAndSendFunctions(client, getWriteInstruction(input)),
-                    truncate: input => addSelfPlanAndSendFunctions(client, getTruncateInstruction(input)),
-                    deploy: input => addSelfPlanAndSendFunctions(client, getDeployInstruction(input)),
-                    retract: input => addSelfPlanAndSendFunctions(client, getRetractInstruction(input)),
-                    transferAuthority: input =>
-                        addSelfPlanAndSendFunctions(client, getTransferAuthorityInstruction(input)),
-                    finalize: input => addSelfPlanAndSendFunctions(client, getFinalizeInstruction(input)),
+                    write: (input, instructionConfig) =>
+                        addSelfPlanAndSendFunctions(
+                            client,
+                            getWriteInstruction(input, {
+                                programAddress: instructionConfig?.programAddress ?? config.programAddress,
+                            }),
+                        ),
+                    truncate: (input, instructionConfig) =>
+                        addSelfPlanAndSendFunctions(
+                            client,
+                            getTruncateInstruction(input, {
+                                programAddress: instructionConfig?.programAddress ?? config.programAddress,
+                            }),
+                        ),
+                    deploy: (input, instructionConfig) =>
+                        addSelfPlanAndSendFunctions(
+                            client,
+                            getDeployInstruction(input, {
+                                programAddress: instructionConfig?.programAddress ?? config.programAddress,
+                            }),
+                        ),
+                    retract: (input, instructionConfig) =>
+                        addSelfPlanAndSendFunctions(
+                            client,
+                            getRetractInstruction(input, {
+                                programAddress: instructionConfig?.programAddress ?? config.programAddress,
+                            }),
+                        ),
+                    transferAuthority: (input, instructionConfig) =>
+                        addSelfPlanAndSendFunctions(
+                            client,
+                            getTransferAuthorityInstruction(input, {
+                                programAddress: instructionConfig?.programAddress ?? config.programAddress,
+                            }),
+                        ),
+                    finalize: (input, instructionConfig) =>
+                        addSelfPlanAndSendFunctions(
+                            client,
+                            getFinalizeInstruction(input, {
+                                programAddress: instructionConfig?.programAddress ?? config.programAddress,
+                            }),
+                        ),
                 },
                 identifyInstruction: identifyLoaderV4Instruction,
                 parseInstruction: parseLoaderV4Instruction,

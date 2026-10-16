@@ -112,14 +112,15 @@ export function getWriteInstruction<
     TProgramAddress extends Address = typeof LOADER_V4_PROGRAM_ADDRESS,
 >(
     input: WriteInput<TAccountProgram, TAccountAuthority>,
-    config?: { programAddress?: TProgramAddress },
+    config?: { programAddress?: TProgramAddress | { readonly address: TProgramAddress } },
 ): WriteInstruction<
     TProgramAddress,
     ResolvedInstructionAccountMeta<TAccountProgram, InstructionAccountInputAddress<TAccountProgram>>,
     ResolvedInstructionAccountMeta<TAccountAuthority, InstructionAccountInputAddress<TAccountAuthority>>
 > {
     // Program address.
-    const programAddress = config?.programAddress ?? LOADER_V4_PROGRAM_ADDRESS;
+    const programAddressInput = config?.programAddress ?? LOADER_V4_PROGRAM_ADDRESS;
+    const programAddress = typeof programAddressInput === 'string' ? programAddressInput : programAddressInput.address;
 
     // Account meta helper.
     const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');

@@ -107,7 +107,7 @@ export function getTransferAuthorityInstruction<
     TProgramAddress extends Address = typeof LOADER_V4_PROGRAM_ADDRESS,
 >(
     input: TransferAuthorityInput<TAccountProgram, TAccountCurrentAuthority, TAccountNewAuthority>,
-    config?: { programAddress?: TProgramAddress },
+    config?: { programAddress?: TProgramAddress | { readonly address: TProgramAddress } },
 ): TransferAuthorityInstruction<
     TProgramAddress,
     ResolvedInstructionAccountMeta<TAccountProgram, InstructionAccountInputAddress<TAccountProgram>>,
@@ -115,7 +115,8 @@ export function getTransferAuthorityInstruction<
     ResolvedInstructionAccountMeta<TAccountNewAuthority, InstructionAccountInputAddress<TAccountNewAuthority>>
 > {
     // Program address.
-    const programAddress = config?.programAddress ?? LOADER_V4_PROGRAM_ADDRESS;
+    const programAddressInput = config?.programAddress ?? LOADER_V4_PROGRAM_ADDRESS;
+    const programAddress = typeof programAddressInput === 'string' ? programAddressInput : programAddressInput.address;
 
     // Account meta helper.
     const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');

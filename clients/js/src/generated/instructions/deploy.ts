@@ -102,7 +102,7 @@ export function getDeployInstruction<
     TProgramAddress extends Address = typeof LOADER_V4_PROGRAM_ADDRESS,
 >(
     input: DeployInput<TAccountProgram, TAccountAuthority, TAccountSource>,
-    config?: { programAddress?: TProgramAddress },
+    config?: { programAddress?: TProgramAddress | { readonly address: TProgramAddress } },
 ): DeployInstruction<
     TProgramAddress,
     ResolvedInstructionAccountMeta<TAccountProgram, InstructionAccountInputAddress<TAccountProgram>>,
@@ -110,7 +110,8 @@ export function getDeployInstruction<
     ResolvedInstructionAccountMeta<TAccountSource, InstructionAccountInputAddress<TAccountSource>>
 > {
     // Program address.
-    const programAddress = config?.programAddress ?? LOADER_V4_PROGRAM_ADDRESS;
+    const programAddressInput = config?.programAddress ?? LOADER_V4_PROGRAM_ADDRESS;
+    const programAddress = typeof programAddressInput === 'string' ? programAddressInput : programAddressInput.address;
 
     // Account meta helper.
     const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');

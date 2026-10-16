@@ -117,7 +117,7 @@ export function getTruncateInstruction<
     TProgramAddress extends Address = typeof LOADER_V4_PROGRAM_ADDRESS,
 >(
     input: TruncateInput<TAccountProgram, TAccountAuthority, TAccountDestination>,
-    config?: { programAddress?: TProgramAddress },
+    config?: { programAddress?: TProgramAddress | { readonly address: TProgramAddress } },
 ): TruncateInstruction<
     TProgramAddress,
     ResolvedInstructionAccountMeta<TAccountProgram, InstructionAccountInputAddress<TAccountProgram>>,
@@ -125,7 +125,8 @@ export function getTruncateInstruction<
     ResolvedInstructionAccountMeta<TAccountDestination, InstructionAccountInputAddress<TAccountDestination>>
 > {
     // Program address.
-    const programAddress = config?.programAddress ?? LOADER_V4_PROGRAM_ADDRESS;
+    const programAddressInput = config?.programAddress ?? LOADER_V4_PROGRAM_ADDRESS;
+    const programAddress = typeof programAddressInput === 'string' ? programAddressInput : programAddressInput.address;
 
     // Account meta helper.
     const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
